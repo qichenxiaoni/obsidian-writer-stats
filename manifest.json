@@ -4,6 +4,6 @@
 	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
 	"description": "自动跟踪每日写作字数，支持中英文和标点符号统计，提供热力图可视化展示。",
-	"author": "Word Count Plugin",
+	"author": "qichenxiaoni",
 	"isDesktopOnly": false
 }

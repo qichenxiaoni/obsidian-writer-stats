@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-writer-stats",
 	"version": "0.0.1",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "This is the word count plugin of Obsidian",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
