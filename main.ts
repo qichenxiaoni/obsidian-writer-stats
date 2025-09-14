@@ -498,9 +498,9 @@ export default class WordCountPlugin extends Plugin {
 			if (this.settings.trackNumbers && (numberRegex.test(char) || fullWidthNumberRegex.test(char))) {
 				numbers++;
 			}
-			// 然后检查英文字符
+			// 然后检查英文字符和单词
 			else if (this.settings.trackEnglish && englishRegex.test(char)) {
-				// 检查是否是英文单词的一部分
+				// 检查是否是英文单词的开始
 				if (i === 0 || !englishRegex.test(text[i - 1])) {
 					// 可能是英文单词的开始
 					let j = i;
@@ -509,12 +509,15 @@ export default class WordCountPlugin extends Plugin {
 					}
 					const word = text.substring(i, j);
 					
-					// 排除单独的罗马数字
-					if (!/^[IVXLCDM]+$/i.test(word)) {
-						english++;
+					// 排除单独的罗马数字和单个字符
+					if (!/^[IVXLCDM]+$/i.test(word) && word.length > 1) {
+						english += word.length; // 统计英文字符数
 						if (this.settings.showWordCount) {
-							words++;
+							words++; // 统计单词数
 						}
+					} else if (word.length === 1 && /^[a-zA-Z]$/.test(word)) {
+						// 单个字母，也计入英文字符统计
+						english++;
 					}
 					i = j - 1; // 因为循环末尾会i++
 				}
@@ -906,9 +909,14 @@ class StatisticsModal extends Modal {
 			const colorIndex = Math.floor(intensity * (this.settings.heatmapColors.length - 1));
 			cell.style.backgroundColor = this.settings.heatmapColors[colorIndex] || '#ebedf0';
 			
+			// 根据完成状态添加样式类
+			if (stats && stats.completed) {
+				cell.classList.add('completed');
+			}
+			
 			// 设置提示信息
 			const tooltip = stats
-				? `${dateStr}: ${stats.total} 字 (${stats.completed ? '✅' : '❌'})`
+				? `${dateStr}: ${stats.total} 字 (${stats.completed ? '✅ 已完成' : '❌ 未完成'})`
 				: `${dateStr}: 无数据`;
 			cell.setAttribute('title', tooltip);
 			
@@ -916,6 +924,9 @@ class StatisticsModal extends Modal {
 			cell.onclick = () => {
 				this.showDayDetails(dateStr, stats);
 			};
+			
+			// 添加动画延迟
+			cell.style.animationDelay = `${i * 0.01}s`;
 			
 			// 统计数据
 			if (stats) {
