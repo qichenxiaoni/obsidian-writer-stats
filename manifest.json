@@ -1,11 +1,9 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
+	"id": "word-count-plugin",
+	"name": "字数统计",
+	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "自动跟踪每日写作字数，支持中英文和标点符号统计，提供热力图可视化展示。",
+	"author": "Word Count Plugin",
 	"isDesktopOnly": false
 }

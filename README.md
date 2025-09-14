@@ -1,16 +1,121 @@
-# Obsidian Sample Plugin
+# Obsidian 字数统计插件
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+这是一个功能完善的Obsidian字数统计插件，帮助用户跟踪写作习惯、设定目标并通过热力图可视化展示。
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## 主要功能
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+### 1. 写作统计
+- 自动跟踪用户每天在Obsidian中书写的中文字符、英文字符以及标点符号
+- 实时更新统计，支持文件编辑和创建事件监听
+- 按日期存储历史数据，支持长期统计
+- **已修复**：字数统计现在与Obsidian内置统计保持一致，准确排除Markdown语法元素
+- **优化统计**：
+  - 高性能单次遍历统计算法
+  - 支持数字和空格统计
+  - 智能词数统计功能
+  - 详细的字符类型分析和占比
+  - 可折叠的统计详情面板
+
+### 2. 目标和连续写作
+- 用户可以设定每日书写字符目标并跟踪每日目标完成情况
+- 显示目标完成百分比和完成状态
+- 计算并显示连续写作天数，记录最长连续记录
+
+### 3. 热力视图
+- 使用热力图展现用户每天输入的情况
+- 支持30天写作历史可视化
+- 可自定义热力图颜色方案
+
+## 使用方法
+
+### 安装
+1. 将 `main.js`、`manifest.json` 和 `styles.css` 复制到你的 vault 的插件目录：
+   ```
+   <Vault>/.obsidian/plugins/word-count-plugin/
+   ```
+2. 重启 Obsidian
+3. 在设置中启用插件
+
+### 基本使用
+1. **查看统计**：点击左侧边栏的"字数统计"图标或使用命令"显示字数统计"
+2. **设置目标**：在插件设置中设定每日写作目标字数
+3. **自定义统计**：选择要统计的字符类型（中文、英文、标点符号）
+4. **热力图**：在统计视图中查看最近30天的写作热力图
+
+### 命令
+- **显示字数统计**：打开统计信息模态框
+- **重置统计数据**：清除所有历史统计数据（不可恢复）
+
+### 设置选项
+- **每日目标字数**：设定每日写作目标（100-10000字）
+- **显示状态栏**：在状态栏显示今日字数统计
+- **统计选项**：选择要统计的字符类型
+- **热力图设置**：启用/禁用热力图显示
+
+## 技术实现
+
+### 开发环境
+- 使用TypeScript开发，提供类型检查
+- 使用esbuild进行构建和打包
+- 遵循Obsidian插件开发规范
+
+### 核心功能
+- **字符统计算法**：使用正则表达式精确统计中文字符、英文字符和标点符号
+- **数据存储**：按日期存储统计数据，支持增量更新
+- **热力图实现**：使用CSS Grid布局，动态颜色映射
+- **性能优化**：防抖处理文件变更，批量更新数据
+
+### 目录结构
+```
+.
+├── main.ts                 # 插件入口点
+├── manifest.json           # 插件清单
+├── styles.css              # 插件样式
+├── package.json            # 项目配置
+├── tsconfig.json           # TypeScript配置
+├── esbuild.config.mjs      # 构建配置
+└── README.md               # 说明文档
+```
+
+## 构建和发布
+
+### 开发构建
+```bash
+npm run dev
+```
+
+### 生产构建
+```bash
+npm run build
+```
+
+### 版本管理
+- 更新 `manifest.json` 中的版本号
+- 更新 `versions.json` 以支持不同Obsidian版本
+
+## 兼容性
+
+- 支持桌面端和移动端
+- 兼容 Obsidian 0.15.0 及以上版本
+- 支持所有主流操作系统
+
+## 注意事项
+
+- 插件会自动跟踪所有Markdown文件的编辑
+- 数据存储在本地，不会上传到任何服务器
+- 重置数据操作不可恢复，请谨慎操作
+
+## 后续计划
+
+- [ ] 添加数据导出功能（CSV格式）
+- [ ] 实现更多统计图表（趋势图、饼图等）
+- [ ] 支持按文件类型和文件夹统计
+- [ ] 添加写作时间分析功能
+- [ ] 实现数据备份和恢复
+
+## 许可证
+
+MIT License
 
 ## First time developing plugins?
 
