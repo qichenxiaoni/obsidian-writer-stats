@@ -1,3 +1,4 @@
+
 /* 字数统计插件样式 */
 
 /* 统计信息模态框样式 */
@@ -44,11 +45,25 @@
 
 /* 热力图容器样式 */
 .word-count-heatmap {
-	padding: 20px;
-	border-radius: 8px;
-	background-color: var(--background-secondary);
-	border: 1px solid var(--background-modifier-border);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	padding: 24px;
+	border-radius: 16px;
+	background: linear-gradient(135deg, var(--background-secondary), var(--background-modifier-hover));
+	border: 2px solid var(--background-modifier-border);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+	position: relative;
+	overflow: hidden;
+}
+
+.word-count-heatmap::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+	            radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+	pointer-events: none;
 }
 
 .word-count-heatmap h3 {
@@ -77,79 +92,162 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 20px;
-	gap: 16px;
-	padding: 12px;
-	background-color: var(--background-secondary-alt);
-	border-radius: 6px;
-	border: 1px solid var(--background-modifier-border);
+	margin-bottom: 24px;
+	gap: 20px;
+	padding: 16px 20px;
+	background: linear-gradient(135deg, var(--background-secondary-alt), var(--background-modifier-hover));
+	border-radius: 12px;
+	border: 2px solid var(--background-modifier-border);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	position: relative;
+	overflow: hidden;
+}
+
+.heatmap-controls::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(45deg, transparent 0%, rgba(255, 255, 255, 0.05) 50%, transparent 100%);
+	pointer-events: none;
 }
 
 .heatmap-range {
-	padding: 6px 12px;
-	background-color: var(--background-primary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
+	padding: 8px 16px;
+	background: linear-gradient(135deg, var(--background-primary), var(--background-secondary));
+	border: 2px solid var(--background-modifier-border);
+	border-radius: 8px;
 	color: var(--text-normal);
 	font-size: 14px;
-	font-weight: 500;
+	font-weight: 600;
 	cursor: pointer;
-	transition: all 0.2s ease;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	position: relative;
+	z-index: 1;
 }
 
 .heatmap-range:hover {
-	background-color: var(--background-modifier-hover);
+	background: linear-gradient(135deg, var(--background-modifier-hover), var(--interactive-accent));
 	border-color: var(--interactive-accent);
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	color: var(--text-on-accent);
 }
 
 .heatmap-range:focus {
 	outline: none;
 	border-color: var(--interactive-accent);
-	box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 0 0 3px rgba(var(--interactive-accent-rgb), 0.2);
 }
 
 .heatmap-stats {
 	font-size: 13px;
 	color: var(--text-muted);
-	font-weight: 500;
-	background-color: var(--background-primary);
-	padding: 6px 12px;
-	border-radius: 4px;
-	border: 1px solid var(--background-modifier-border);
-}
-
-/* 热力图网格样式 */
-.heatmap-grid {
-	display: grid;
-	gap: 3px;
-	margin: 0 auto;
-	max-width: 100%;
-	overflow-x: auto;
-	padding: 10px;
-	background-color: var(--background-primary);
+	font-weight: 600;
+	background: linear-gradient(135deg, var(--background-primary), var(--background-secondary));
+	padding: 8px 16px;
 	border-radius: 8px;
-	border: 1px solid var(--background-modifier-border);
+	border: 2px solid var(--background-modifier-border);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	position: relative;
+	z-index: 1;
+	transition: all 0.3s ease;
 }
 
-/* 热力图单元格样式 */
+.heatmap-stats:hover {
+	background: linear-gradient(135deg, var(--background-modifier-hover), var(--background-secondary));
+	border-color: var(--interactive-accent);
+	transform: translateY(-1px);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 热力图网格样式 - 已合并到统一基础样式中 */
+
+.heatmap-grid::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(45deg, transparent 0%, rgba(255, 255, 255, 0.05) 50%, transparent 100%);
+	border-radius: 12px;
+	pointer-events: none;
+}
+
+/* 热力图单元格样式 - 优化美观性 */
 .heatmap-cell {
-	width: 12px;
-	height: 12px;
-	border-radius: 3px;
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	width: 20px !important;
+	height: 20px !important;
+	min-width: 20px !important;
+	min-height: 20px !important;
+	border-radius: 4px;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 	cursor: pointer;
-	min-width: 12px;
 	position: relative;
-	background-color: var(--background-modifier-border);
-	border: 1px solid transparent;
+	background-color: #f8f9fa !important; /* 默认未完成颜色 */
+	border: 2px solid #e9ecef;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+	overflow: hidden;
+	display: block !important;
+	box-sizing: border-box;
+	flex-shrink: 0; /* 防止单元格被压缩 */
+}
+
+/* 不同主题的未完成状态样式 */
+.heatmap-cell[data-theme="github"] {
+	background-color: #ebedf0 !important;
+	border-color: #d1d5db;
+}
+
+.heatmap-cell[data-theme="green"] {
+	background-color: #f0f9f0 !important;
+	border-color: #d1fae5;
+}
+
+.heatmap-cell[data-theme="blue"] {
+	background-color: #f0f4ff !important;
+	border-color: #dbeafe;
+}
+
+.heatmap-cell[data-theme="purple"] {
+	background-color: #faf5ff !important;
+	border-color: #e9d5ff;
 }
 
 .heatmap-cell:hover {
-	transform: scale(1.4);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+	transform: scale(1.1);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+	z-index: 10;
+}
+
+.heatmap-cell::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+	border-radius: 4px;
+	opacity: 0;
+	transition: opacity 0.3s ease;
+}
+
+.heatmap-cell:hover {
+	transform: scale(1.6) translateZ(0);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 	z-index: 20;
 	position: relative;
 	border-color: var(--interactive-accent);
+	background-color: var(--interactive-accent) !important;
+}
+
+.heatmap-cell:hover::before {
+	opacity: 1;
 }
 
 .heatmap-cell::after {
@@ -157,63 +255,190 @@
 	position: absolute;
 	bottom: 100%;
 	left: 50%;
-	transform: translateX(-50%);
-	margin-bottom: 8px;
-	padding: 6px 10px;
-	background-color: var(--background-secondary);
+	transform: translateX(-50%) translateY(-8px);
+	margin-bottom: 12px;
+	padding: 8px 12px;
+	background: linear-gradient(135deg, var(--background-secondary), var(--background-modifier-hover));
 	color: var(--text-normal);
 	font-size: 12px;
-	font-weight: 500;
-	border-radius: 6px;
+	font-weight: 600;
+	border-radius: 8px;
 	white-space: nowrap;
 	opacity: 0;
 	pointer-events: none;
-	transition: opacity 0.3s ease;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+	border: 1px solid var(--interactive-accent);
+	backdrop-filter: blur(8px);
 }
 
 .heatmap-cell:hover::after {
 	opacity: 1;
+	transform: translateX(-50%) translateY(-4px);
 }
 
 /* 月份标签样式 */
 .heatmap-month-labels {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 12px;
-	margin-bottom: 12px;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 16px;
 	padding: 0 8px;
-	justify-content: center;
+	justify-content: flex-start;
+	align-items: flex-start;
+	position: absolute;
+	right: 8px;
+	top: 8px;
+	z-index: 10;
+	max-height: 200px;
+	overflow-y: auto;
+}
+
+/* 模态框中的月份标签特殊处理 */
+.word-count-modal .heatmap-month-labels {
+	position: static;
+	display: none; /* 在模态框中隐藏月份标签，避免重叠 */
 }
 
 .heatmap-month-label {
-	font-size: 13px;
+	font-size: 12px;
 	color: var(--text-muted);
-	font-weight: 600;
-	background-color: var(--background-secondary-alt);
-	padding: 4px 10px;
-	border-radius: 4px;
-	border: 1px solid var(--background-modifier-border);
+	font-weight: 700;
+	background: linear-gradient(135deg, var(--background-secondary-alt), var(--background-modifier-hover));
+	padding: 6px 12px;
+	border-radius: 20px;
+	border: 2px solid var(--background-modifier-border);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	position: relative;
+	overflow: hidden;
+}
+
+.heatmap-month-label::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+	transition: left 0.5s ease;
+}
+
+.heatmap-month-label:hover {
+	background: linear-gradient(135deg, var(--interactive-accent), var(--interactive-accent-hover));
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.heatmap-month-label:hover::before {
+	left: 100%;
 }
 
 /* 响应式网格 */
 .heatmap-grid[data-days="7"] {
 	grid-template-columns: repeat(7, 1fr);
+	max-width: 140px;
+	justify-content: center;
 }
 
 .heatmap-grid[data-days="30"] {
-	grid-template-columns: repeat(30, 1fr);
-	max-width: 380px;
+	grid-template-columns: repeat(7, 1fr);
+	max-width: 140px;
+	justify-content: center;
 }
 
 .heatmap-grid[data-days="90"] {
-	grid-template-columns: repeat(12, 1fr);
-	max-width: 440px;
+	grid-template-columns: repeat(13, 1fr);
+	max-width: 260px;
+	justify-content: center;
 }
 
 .heatmap-grid[data-days="365"] {
 	grid-template-columns: repeat(53, 1fr);
-	max-width: 680px;
+	max-width: 742px;
+	justify-content: center;
+}
+
+/* 移动端响应式 */
+@media (max-width: 768px) {
+	.heatmap-grid[data-days="365"] {
+		grid-template-columns: repeat(26, 1fr);
+		max-width: 400px;
+	}
+	
+	.heatmap-grid[data-days="90"] {
+		grid-template-columns: repeat(9, 1fr);
+		max-width: 220px;
+	}
+	
+	.heatmap-cell {
+		width: 16px;
+		height: 16px;
+		min-width: 16px;
+	}
+	
+	.heatmap-controls {
+		flex-direction: column;
+		gap: 12px;
+		text-align: center;
+	}
+	
+	.heatmap-month-labels {
+		flex-direction: column;
+		gap: 6px;
+	}
+}
+
+/* 加载状态 */
+.heatmap-loading {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 40px;
+	color: var(--text-muted);
+	font-size: 14px;
+}
+
+.heatmap-loading::before {
+	content: '';
+	width: 20px;
+	height: 20px;
+	border: 2px solid var(--background-modifier-border);
+	border-top: 2px solid var(--interactive-accent);
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+	margin-right: 12px;
+}
+
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+
+/* 空状态样式 */
+.heatmap-empty {
+	text-align: center;
+	padding: 40px 20px;
+	color: var(--text-muted);
+	font-size: 14px;
+	display: block !important;
+	visibility: visible !important;
+	width: 100%;
+	height: 100px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.heatmap-empty::before {
+	content: '📊';
+	font-size: 48px;
+	display: block;
+	margin-bottom: 16px;
+	opacity: 0.5;
 }
 
 /* 滚动条样式 */
@@ -239,47 +464,646 @@
 @keyframes heatmapFadeIn {
 	from {
 		opacity: 0;
-		transform: translateY(10px);
+		transform: translateY(20px) scale(0.9);
 	}
 	to {
 		opacity: 1;
-		transform: translateY(0);
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes cellPulse {
+	0%, 100% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.05);
+	}
+}
+
+@keyframes cellGlow {
+	0%, 100% {
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	}
+	50% {
+		box-shadow: 0 0 8px rgba(var(--interactive-accent-rgb), 0.3);
 	}
 }
 
 .word-count-heatmap {
-	animation: heatmapFadeIn 0.5s ease-out;
+	animation: heatmapFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 热力图完成状态样式 */
+.heatmap-cell {
+	animation: cellFadeIn 0.5s ease-out both;
+}
+
+@keyframes cellFadeIn {
+	from {
+		opacity: 0;
+		transform: scale(0.8);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+/* 热力图完成状态样式 - 动态颜色 */
 .heatmap-cell.completed {
-	border-color: var(--interactive-accent);
+	background: linear-gradient(135deg, #10b981, #059669) !important;
+	border-color: #047857;
+	position: relative;
+	box-shadow: 0 3px 6px rgba(16, 185, 129, 0.3);
+	animation: cellGlow 2s ease-in-out infinite;
+}
+
+.heatmap-cell.completed:hover {
+	background: linear-gradient(135deg, #059669, #047857) !important;
+	box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* 不同主题的完成状态样式 */
+.heatmap-cell.completed[data-theme="github"] {
+	background: linear-gradient(135deg, #216e39, #1a5a2e) !important;
+	border-color: #14401f;
+	box-shadow: 0 3px 6px rgba(33, 110, 57, 0.3);
+}
+
+.heatmap-cell.completed[data-theme="green"] {
+	background: linear-gradient(135deg, #10b981, #059669) !important;
+	border-color: #047857;
+	box-shadow: 0 3px 6px rgba(16, 185, 129, 0.3);
+}
+
+.heatmap-cell.completed[data-theme="blue"] {
+	background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+	border-color: #1e40af;
+	box-shadow: 0 3px 6px rgba(37, 99, 235, 0.3);
+}
+
+.heatmap-cell.completed[data-theme="purple"] {
+	background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+	border-color: #5b21b6;
+	box-shadow: 0 3px 6px rgba(124, 58, 237, 0.3);
+}
+
+.heatmap-cell.completed::before {
+	content: '✓';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	color: var(--text-on-accent);
+	font-size: 8px;
+	font-weight: bold;
+	opacity: 0.8;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .heatmap-cell.completed::after {
-	border: 1px solid var(--interactive-accent);
+	border: 2px solid var(--interactive-accent);
+	background: linear-gradient(135deg, var(--interactive-accent), var(--interactive-accent-hover));
+}
+
+/* 主题适配 */
+.theme-dark .heatmap-grid {
+	background: linear-gradient(135deg, var(--background-primary), #1a1a1a);
+}
+
+.theme-light .heatmap-grid {
+	background: linear-gradient(135deg, var(--background-primary), #f8f9fa);
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+	.heatmap-cell {
+		border: 2px solid var(--text-normal);
+	}
+	
+	.heatmap-cell.completed {
+		border: 3px solid var(--interactive-accent);
+	}
+	
+	.heatmap-cell:hover {
+		border: 3px solid var(--interactive-accent);
+	}
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+	.heatmap-cell,
+	.heatmap-cell::before,
+	.heatmap-cell::after,
+	.heatmap-month-label,
+	.heatmap-range,
+	.heatmap-stats {
+		transition: none;
+		animation: none;
+	}
+	
+	.heatmap-cell.completed {
+		animation: none;
+	}
+}
+
+/* 模态框样式 */
+.word-count-modal {
+	padding: 24px;
+	max-width: 90vw;
+	max-height: 85vh;
+	overflow-y: auto;
+	background: var(--background-primary);
+	border-radius: 12px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* 模态框滚动条样式 */
+.word-count-modal::-webkit-scrollbar {
+	width: 8px;
+}
+
+.word-count-modal::-webkit-scrollbar-track {
+	background: var(--background-modifier-border);
+	border-radius: 4px;
+}
+
+.word-count-modal::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-hover);
+	border-radius: 4px;
+}
+
+.word-count-modal::-webkit-scrollbar-thumb:hover {
+	background: var(--interactive-accent);
+}
+
+.word-count-modal-title {
+	text-align: center;
+	margin-bottom: 24px;
+	padding-bottom: 12px;
+	border-bottom: 2px solid var(--interactive-accent);
+	color: var(--text-normal);
+	font-size: 20px;
+	font-weight: 700;
+}
+
+/* 模态框中的热力图特殊样式 */
+.word-count-modal .word-count-heatmap {
+	margin: 20px 0;
+	max-width: 100%;
+	overflow: visible;
+	position: relative;
+	display: block !important;
+	visibility: visible !important;
+	min-height: 300px;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.word-count-modal .heatmap-container {
+	display: block !important;
+	visibility: visible !important;
+}
+
+.word-count-modal .heatmap-content {
+	display: block !important;
+	visibility: visible !important;
+	width: 100%;
+	min-height: 200px;
+	padding: 16px;
+	box-sizing: border-box;
+}
+
+/* 热力图容器滚动优化 */
+.word-count-modal .heatmap-grid {
+	scrollbar-width: thin;
+	scrollbar-color: var(--interactive-accent) var(--background-modifier-border);
+}
+
+.word-count-modal .heatmap-grid::-webkit-scrollbar {
+	height: 6px;
+}
+
+.word-count-modal .heatmap-grid::-webkit-scrollbar-track {
+	background: var(--background-modifier-border);
+	border-radius: 3px;
+}
+
+.word-count-modal .heatmap-grid::-webkit-scrollbar-thumb {
+	background: var(--interactive-accent);
+	border-radius: 3px;
+}
+
+.word-count-modal .heatmap-grid::-webkit-scrollbar-thumb:hover {
+	background: var(--interactive-accent-hover);
+}
+
+/* 自定义颜色区间设置样式 */
+.color-ranges-container {
+	padding: 10px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	background: var(--background-secondary);
+}
+
+.color-range-item {
+	padding: 8px;
+	border: 1px solid var(--background-modifier-border-hover);
+	border-radius: 6px;
+	background: var(--background-primary);
+	margin-bottom: 8px;
+}
+
+.color-range-item input {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 4px 8px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+}
+
+.color-range-item input:focus {
+	border-color: var(--interactive-accent);
+	outline: none;
+}
+
+.color-range-item button {
+	padding: 4px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+}
+
+.color-range-item button:hover {
+	background: var(--background-modifier-hover);
+}
+
+/* 热力图缩放功能样式 */
+.heatmap-zoom-container {
+	position: relative;
+	overflow: visible !important; /* 确保边缘不被裁剪 */
+	border-radius: 12px;
+	border: 2px solid var(--background-modifier-border);
+	background: linear-gradient(135deg, var(--background-primary), var(--background-secondary));
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	backdrop-filter: blur(8px);
+	padding: 16px; /* 调整内边距，为热力图提供空间 */
+	min-height: 200px; /* 确保有足够的高度 */
+	box-sizing: border-box; /* 确保边框和内边距包含在总尺寸内 */
+}
+
+.zoom-controls {
+	position: absolute;
+	top: 10px; /* 移到热力图内部右上角 */
+	right: 10px;
+	display: none; /* 默认隐藏 */
+	gap: 5px;
+	z-index: 10;
+	background: rgba(var(--background-primary-rgb), 0.95);
+	border-radius: 8px;
+	padding: 8px;
+	backdrop-filter: blur(8px);
+	border: 1px solid var(--background-modifier-border);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	transition: opacity 0.3s ease; /* 添加淡入淡出效果 */
+}
+
+.zoom-controls button {
+	width: 32px;
+	height: 32px;
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: 16px;
+	font-weight: bold;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.zoom-controls button:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+	transform: scale(1.05);
+}
+
+.zoom-controls button:active {
+	transform: scale(0.95);
+}
+
+.zoom-controls span {
+	padding: 0 8px;
+	font-size: 12px;
+	color: var(--text-muted);
+	display: flex;
+	align-items: center;
+	font-weight: 500;
+}
+
+/* 缩放时的热力图网格样式 */
+.heatmap-zoom-container .heatmap-grid {
+	transform-origin: center center;
+	transition: transform 0.2s ease;
+}
+
+/* 热力图控制面板样式 - 已移除 */
+
+.word-count-modal .heatmap-controls > * {
+	flex-shrink: 0;
+}
+
+/* 下拉菜单样式 - 统一定义 */
+.word-count-modal .heatmap-range,
+.word-count-modal .range-select {
+	/* 尺寸和布局 */
+	min-width: 180px !important;
+	width: auto !important;
+	max-width: 300px;
+	padding: 12px 20px !important;
+	
+	/* 字体和文本 */
+	font-size: 14px !important;
+	font-weight: 600 !important;
+	color: var(--text-normal) !important;
+	text-align: center;
+	white-space: nowrap;
+	overflow: visible;
+	
+	/* 外观样式 */
+	background: var(--background-primary) !important;
+	border: 2px solid var(--background-modifier-border) !important;
+	border-radius: 8px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	
+	/* 交互 */
+	cursor: pointer;
+	transition: all 0.3s ease;
+	
+	/* 保持原生下拉功能和箭头 */
+	-webkit-appearance: menulist !important;
+	-moz-appearance: menulist !important;
+	appearance: menulist !important;
+	
+	/* 确保选中文字可见 */
+	line-height: 1.4;
+	vertical-align: middle;
+	display: block !important;
+	visibility: visible !important;
+}
+
+.word-count-modal .heatmap-range:hover,
+.word-count-modal .range-select:hover {
+	border-color: var(--interactive-accent);
+	transform: translateY(-1px);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.word-count-modal .heatmap-range:focus,
+.word-count-modal .range-select:focus {
+	border-color: var(--interactive-accent);
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* 确保选中文字在所有主题下都可见 */
+.theme-dark .word-count-modal .heatmap-range,
+.theme-dark .word-count-modal .range-select {
+	color: var(--text-normal) !important;
+	background: var(--background-primary) !important;
+}
+
+.theme-light .word-count-modal .heatmap-range,
+.theme-light .word-count-modal .range-select {
+	color: var(--text-normal) !important;
+	background: var(--background-primary) !important;
+}
+
+/* 确保option文本显示 */
+.word-count-modal .range-select option,
+.word-count-modal .heatmap-range option {
+	color: var(--text-normal) !important;
+	background: var(--background-primary) !important;
+	font-size: 14px !important;
+	padding: 8px !important;
+}
+
+.word-count-modal .heatmap-stats {
+	width: 100%;
+	max-width: 400px;
+	text-align: center;
+	font-size: 13px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	padding: 10px 16px;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	margin: 0 auto;
+}
+
+/* 模态框中的网格样式优化 */
+.word-count-modal .heatmap-grid {
+	gap: 4px; /* 减小间距，防止单元格超出边框 */
+	padding: 8px; /* 添加内边距，确保单元格不超出边框 */
+	margin: 0 auto;
+	justify-content: center;
+	width: fit-content;
+	max-width: 100%;
+	overflow: visible !important; /* 确保边缘不被裁剪 */
+	border-radius: 8px;
+	background: var(--background-primary);
+	box-sizing: border-box; /* 确保边框和内边距包含在总尺寸内 */
+}
+
+/* 7天视图 - 一行7列 */
+.word-count-modal .heatmap-grid[data-days="7"] {
+	grid-template-columns: repeat(7, 1fr);
+	width: fit-content;
+	max-width: 200px;
+}
+
+/* 30天视图 - 按周排列 (7x5) */
+.word-count-modal .heatmap-grid[data-days="30"] {
+	grid-template-columns: repeat(7, 1fr);
+	width: fit-content;
+	max-width: 200px;
+}
+
+/* 90天视图 - 13周排列 */
+.word-count-modal .heatmap-grid[data-days="90"] {
+	grid-template-columns: repeat(7, 1fr);
+	width: fit-content;
+	max-width: 300px;
+	gap: 4px;
+}
+
+/* 365天视图 - GitHub风格 53周 */
+.word-count-modal .heatmap-grid[data-days="365"] {
+	grid-template-columns: repeat(53, 1fr);
+	width: fit-content;
+	max-width: 90%;
+	gap: 3px;
+}
+
+/* 热力图单元格自适应大小 */
+.word-count-modal .heatmap-cell {
+	width: 18px;
+	height: 18px;
+	min-width: 18px;
+	border-radius: 3px;
+}
+
+/* 7天和30天使用较大的单元格 */
+.word-count-modal .heatmap-grid[data-days="7"] .heatmap-cell,
+.word-count-modal .heatmap-grid[data-days="30"] .heatmap-cell {
+	width: 20px;
+	height: 20px;
+	min-width: 20px;
+}
+
+/* 90天使用中等大小的单元格 */
+.word-count-modal .heatmap-grid[data-days="90"] .heatmap-cell {
+	width: 16px;
+	height: 16px;
+	min-width: 16px;
+}
+
+/* 365天使用较小的单元格以适应宽度 */
+.word-count-modal .heatmap-grid[data-days="365"] .heatmap-cell {
+	width: 12px;
+	height: 12px;
+	min-width: 12px;
+}
+
+/* 模态框移动端适配 */
+@media (max-width: 768px) {
+	.word-count-modal {
+		padding: 16px;
+		max-width: 95vw;
+		max-height: 90vh;
+	}
+	
+	.word-count-modal-title {
+		font-size: 18px;
+		margin-bottom: 16px;
+	}
+	
+	.word-count-modal .heatmap-controls {
+		flex-direction: column;
+		gap: 16px;
+		align-items: center;
+		padding: 16px;
+	}
+	
+	.word-count-modal .heatmap-range {
+		min-width: 250px;
+		width: 90%;
+		max-width: 350px;
+		margin: 0 auto;
+		/* 移动端保持相同的文字样式 */
+		font-size: 14px;
+		text-align: center;
+	}
+	
+	.word-count-modal .heatmap-stats {
+		width: 90%;
+		max-width: none;
+		text-align: center;
+		font-size: 12px;
+		white-space: normal;
+		line-height: 1.4;
+	}
+	
+	/* 移动端热力图网格调整 */
+	.word-count-modal .heatmap-grid[data-days="365"] {
+		grid-template-columns: repeat(26, 1fr);
+		max-width: 95%;
+		gap: 2px;
+	}
+	
+	.word-count-modal .heatmap-grid[data-days="90"] {
+		grid-template-columns: repeat(7, 1fr);
+		max-width: 180px;
+		gap: 3px;
+	}
+	
+	.word-count-modal .heatmap-grid[data-days="30"],
+	.word-count-modal .heatmap-grid[data-days="7"] {
+		max-width: 180px;
+	}
+	
+	/* 移动端单元格大小调整 */
+	.word-count-modal .heatmap-grid[data-days="365"] .heatmap-cell {
+		width: 10px;
+		height: 10px;
+		min-width: 10px;
+	}
+	
+	.word-count-modal .heatmap-grid[data-days="90"] .heatmap-cell {
+		width: 14px;
+		height: 14px;
+		min-width: 14px;
+	}
+	
+	.word-count-modal .heatmap-grid[data-days="30"] .heatmap-cell,
+	.word-count-modal .heatmap-grid[data-days="7"] .heatmap-cell {
+		width: 16px;
+		height: 16px;
+		min-width: 16px;
+	}
+}
+
+/* 模态框中的统计区域优化 */
+.word-count-modal .word-count-stats,
+.word-count-modal .word-count-streak {
+	margin-bottom: 16px;
+	padding: 16px;
+}
+
+.word-count-modal .word-count-stats h3,
+.word-count-modal .word-count-streak h3 {
+	margin-bottom: 12px;
+	font-size: 16px;
 }
 
 /* 关闭按钮样式 */
 .modal-button {
-	margin-top: 20px;
-	padding: 8px 16px;
-	background-color: var(--interactive-accent);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 24px auto 0;
+	padding: 10px 24px;
+	background: linear-gradient(135deg, var(--interactive-accent), var(--interactive-accent-hover));
 	color: var(--text-on-accent);
 	border: none;
-	border-radius: 4px;
+	border-radius: 8px;
 	cursor: pointer;
 	font-size: 14px;
-	font-weight: 500;
-	transition: background-color 0.2s ease;
+	font-weight: 600;
+	transition: all 0.3s ease;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	text-align: center;
+	vertical-align: middle;
+	min-width: 80px;
+	min-height: 40px;
 }
 
 .modal-button:hover {
-	background-color: var(--interactive-accent-hover);
+	background: linear-gradient(135deg, var(--interactive-accent-hover), var(--interactive-accent));
+	transform: translateY(-2px);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 /* 设置页面样式 */
-.setting-item.heading {
+/* 字数统计插件设置项标题样式 - 只影响插件设置 */
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item.heading {
 	margin-top: 16px;
 	margin-bottom: 8px;
 	padding-bottom: 8px;
@@ -327,3 +1151,495 @@
 	font-family: var(--font-ui-medium);
 	font-size: var(--font-ui-smaller);
 }
+
+/* 每日目标字数设置的优化样式 */
+
+/* 字数统计插件设置项容器美化 - 只影响插件设置 */
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item {
+	border-radius: 8px;
+	margin-bottom: 12px;
+	transition: all 0.2s ease;
+	border: 1px solid transparent;
+}
+
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item:hover {
+	background-color: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border);
+	transform: translateY(-1px);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item.heading {
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	margin: 16px 0 8px 0;
+}
+
+/* 字数统计插件设置项名称和描述美化 */
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item-name {
+	font-weight: 600;
+	color: var(--text-normal);
+	font-size: 14px;
+}
+
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item-description {
+	color: var(--text-muted);
+	font-size: 13px;
+	margin-top: 4px;
+}
+
+/* 移除滑块相关样式 */
+
+/* 移除输入框动画效果 */
+
+/* 输入错误提示样式 */
+.goal-input-error-tooltip {
+	background: linear-gradient(135deg, var(--background-modifier-error), var(--text-error));
+	color: var(--text-on-accent);
+	border-radius: 6px;
+	padding: 6px 12px;
+	margin-top: 6px;
+	box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+	animation: slideInFade 0.3s ease-out, fadeOutSlide 0.3s ease-in 2.7s;
+	border: 1px solid var(--text-error);
+	font-weight: 500;
+}
+
+@keyframes slideInFade {
+	0% {
+		opacity: 0;
+		transform: translateY(-8px) scale(0.95);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes fadeOutSlide {
+	0% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+	100% {
+		opacity: 0;
+		transform: translateY(-8px) scale(0.95);
+	}
+}
+
+/* 移除滑块相关样式 */
+
+/* 字数统计插件输入框样式优化 - 只影响插件设置 */
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item .setting-item-control input[type="number"] {
+	background: linear-gradient(135deg, var(--background-primary), var(--background-secondary));
+	border: 2px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 8px 12px;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--text-normal);
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	min-width: 80px;
+	text-align: center;
+}
+
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item .setting-item-control input[type="number"]:focus {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1), 0 0 0 5px var(--interactive-accent);
+	outline: none;
+}
+
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item .setting-item-control input[type="number"]:hover {
+	border-color: var(--interactive-accent-hover);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* 字数统计插件当前目标值显示美化 */
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item .setting-item-control .setting-item-info {
+	margin-left: 12px;
+	font-weight: 600;
+	color: var(--text-accent);
+	background: linear-gradient(135deg, var(--background-secondary), var(--background-modifier-hover));
+	padding: 6px 12px;
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	transition: all 0.2s ease;
+}
+
+
+/* 字数统计插件Toggle开关美化 */
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item .setting-item-control .toggle-container {
+	background: var(--background-primary);
+	border: 2px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 4px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	transition: all 0.2s ease;
+}
+
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item .setting-item-control .toggle-container:hover {
+	border-color: var(--interactive-accent-hover);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item .setting-item-control .toggle-switch {
+	background: linear-gradient(135deg, var(--background-modifier-border), var(--background-modifier-hover));
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item .setting-item-control .toggle-switch.checked {
+	background: linear-gradient(135deg, var(--interactive-accent), var(--interactive-accent-hover));
+}
+
+/* 字数统计插件设置页面样式 - 只影响插件设置 */
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] {
+	padding: 20px;
+	background: var(--background-primary);
+}
+
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item {
+	margin-bottom: 24px;
+	padding: 16px;
+	border-radius: 8px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	transition: all 0.2s ease;
+}
+
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+	transform: translateY(-1px);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item.heading {
+	background: var(--background-primary);
+	border: 2px solid var(--interactive-accent);
+	margin: 24px 0 16px 0;
+	padding: 12px 16px;
+}
+
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] h2 {
+	color: var(--text-normal);
+	font-weight: 700;
+	margin-bottom: 32px;
+	padding-bottom: 16px;
+	border-bottom: 3px solid var(--interactive-accent);
+	text-align: center;
+}
+
+/* 字数统计插件设置项名称和描述间距优化 */
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item-name {
+	margin-bottom: 8px;
+	font-size: 15px;
+}
+
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item-description {
+	margin-bottom: 12px;
+	line-height: 1.5;
+}
+
+/* 字数统计插件设置项控制区域间距 */
+.workspace-leaf-content .view-content .setting-tab[data-tab-id="word-count-plugin"] .setting-item-control {
+	margin-top: 8px;
+}
+
+/* ===== 新热力图组件样式 ===== */
+
+/* 热力图容器 */
+.heatmap-container {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 20px;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 12px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 热力图标题 */
+.heatmap-header h3 {
+	margin: 0 0 16px 0;
+	padding: 0;
+	font-size: 18px;
+	font-weight: 600;
+	color: var(--text-normal);
+	text-align: center;
+}
+
+/* 控制面板 */
+.heatmap-controls {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 16px;
+	padding: 16px;
+	background: var(--background-secondary);
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.range-container {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.range-label {
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--text-normal);
+}
+
+.range-select {
+	padding: 8px 12px;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--text-normal);
+	background: var(--background-primary);
+	border: 2px solid var(--background-modifier-border);
+	border-radius: 6px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	min-width: 120px;
+}
+
+.range-select:hover {
+	border-color: var(--interactive-accent);
+	background: var(--background-modifier-hover);
+}
+
+.range-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+/* 热力图网格 - 统一基础样式 */
+.heatmap-grid {
+	display: grid !important;
+	gap: 4px; /* 减小间距，防止单元格超出边框 */
+	padding: 8px; /* 添加内边距，确保单元格不超出边框 */
+	background: linear-gradient(135deg, var(--background-primary), var(--background-secondary));
+	border-radius: 12px;
+	border: 2px solid var(--background-modifier-border);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	justify-content: center;
+	visibility: visible !important;
+	width: auto;
+	height: auto;
+	backdrop-filter: blur(8px);
+	overflow: visible !important; /* 确保边缘不被裁剪 */
+	box-sizing: border-box; /* 确保边框和内边距包含在总尺寸内 */
+}
+
+/* 7天热力图 */
+.heatmap-grid[data-days="7"] {
+	grid-template-columns: repeat(7, 1fr) !important;
+	max-width: 280px;
+	width: fit-content;
+}
+
+/* 30天热力图 - 7列布局，5行 */
+.heatmap-grid[data-days="30"] {
+	grid-template-columns: repeat(7, 1fr) !important;
+	max-width: 280px;
+	width: fit-content;
+	grid-template-rows: repeat(5, 1fr);
+}
+
+/* 90天热力图 */
+.heatmap-grid[data-days="90"] {
+	grid-template-columns: repeat(13, 1fr) !important;
+	max-width: 500px;
+	width: fit-content;
+}
+
+/* 365天热力图 */
+.heatmap-grid[data-days="365"] {
+	grid-template-columns: repeat(53, 1fr) !important;
+	max-width: 800px;
+	width: fit-content;
+}
+
+/* 热力图单元格 */
+.heatmap-cell {
+	width: 12px;
+	height: 12px;
+	border-radius: 3px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	position: relative;
+	border: 1px solid transparent;
+}
+
+.heatmap-cell:hover {
+	transform: scale(1.2);
+	z-index: 10;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 完成状态 */
+.heatmap-cell.completed {
+	position: relative;
+}
+
+.heatmap-cell.completed::after {
+	content: '✓';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-size: 8px;
+	font-weight: bold;
+	color: white;
+	text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+/* 统计信息容器 */
+.heatmap-stats-container {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+	gap: 12px;
+	padding: 16px;
+	background: var(--background-secondary);
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.stat-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 8px;
+	background: var(--background-primary);
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.stat-label {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--text-muted);
+	text-align: center;
+}
+
+.stat-value {
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text-normal);
+	text-align: center;
+}
+
+/* 动画效果 */
+.heatmap-cell {
+	animation: cellFadeIn 0.3s ease forwards;
+	opacity: 1 !important; /* 确保单元格可见 */
+}
+
+@keyframes cellFadeIn {
+	from {
+		opacity: 0;
+		transform: scale(0.8);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+	.heatmap-container {
+		padding: 12px;
+	}
+	
+	.heatmap-controls {
+		flex-direction: column;
+		gap: 12px;
+	}
+	
+	.range-container {
+		flex-direction: column;
+		gap: 4px;
+	}
+	
+	.range-select {
+		min-width: 150px;
+	}
+	
+	.heatmap-grid[data-days="365"] {
+		grid-template-columns: repeat(26, 1fr);
+		max-width: 100%;
+		gap: 3px;
+	}
+	
+	.heatmap-grid[data-days="90"] {
+		grid-template-columns: repeat(9, 1fr);
+		max-width: 100%;
+		gap: 3px;
+	}
+	
+	.heatmap-cell {
+		width: 14px;
+		height: 14px;
+	}
+	
+	.heatmap-stats-container {
+		grid-template-columns: repeat(2, 1fr);
+		gap: 8px;
+	}
+	
+	.stat-item {
+		padding: 6px;
+	}
+	
+	.stat-label {
+		font-size: 11px;
+	}
+	
+	.stat-value {
+		font-size: 14px;
+	}
+}
+
+/* 主题适配 */
+.theme-dark .heatmap-container {
+	background: var(--background-primary);
+	border-color: var(--background-modifier-border);
+}
+
+.theme-light .heatmap-container {
+	background: var(--background-primary);
+	border-color: var(--background-modifier-border);
+}
+
+/* 无障碍支持 */
+@media (prefers-reduced-motion: reduce) {
+	.heatmap-cell {
+		animation: none;
+		transition: none;
+	}
+	
+	.heatmap-cell:hover {
+		transform: none;
+	}
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+	.heatmap-cell {
+		border: 2px solid var(--text-normal);
+	}
+	
+	.heatmap-cell:hover {
+		border-color: var(--interactive-accent);
+	}
+}
+
