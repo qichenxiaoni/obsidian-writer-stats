@@ -13,7 +13,7 @@ export interface WordCountSettings {
 	/** 热力图显示统计信息 */
 	heatmapShowStats: boolean;
 	/** 热力图颜色主题 */
-	heatmapColorTheme: 'github' | 'green' | 'blue' | 'purple' | 'custom';
+	heatmapColorTheme: 'custom';
 	/** 热力图颜色区间配置 */
 	heatmapColorRanges: ColorRange[];
 	/** 是否启用热力图缩放 */
@@ -42,6 +42,37 @@ export interface WordCountSettings {
 	showWordCount: boolean;
 	/** 是否启用缓存优化 */
 	enableCache: boolean;
+	/** 是否启用输入法智能检测 */
+	enableIMEDetection: boolean;
+	
+	// 写作目标相关设置
+	/** 是否启用写作目标 */
+	enableWritingGoals: boolean;
+	/** 每日写作目标字数 */
+	dailyWordGoal: number;
+	/** 每周写作目标字数 */
+	weeklyWordGoal: number;
+	/** 每月写作目标字数 */
+	monthlyWordGoal: number;
+	/** 是否启用目标提醒 */
+	enableGoalReminders: boolean;
+	/** 目标提醒时间 */
+	goalReminderTime: string;
+	
+	
+	// 缓存相关设置
+	/** 缓存最大大小 */
+	cacheMaxSize: number;
+	/** 缓存默认TTL */
+	cacheDefaultTTL: number;
+	
+	// 性能相关设置
+	/** 防抖延迟时间（毫秒） */
+	debounceDelay: number;
+	/** 实时更新防抖时间（毫秒） */
+	realTimeDebounceDelay: number;
+	/** 组合输入防抖时间（毫秒） */
+	compositionDebounceDelay: number;
 }
 
 export interface ColorRange {
@@ -50,6 +81,7 @@ export interface ColorRange {
 	color: string;
 	label: string;
 }
+
 
 /**
  * 默认设置配置
@@ -60,7 +92,7 @@ export const DEFAULT_SETTINGS: WordCountSettings = {
 	heatmapCellSize: 18,
 	heatmapShowMonthLabels: true,
 	heatmapShowStats: true,
-	heatmapColorTheme: 'green',
+	heatmapColorTheme: 'custom',
 	heatmapColorRanges: [
 		{ min: 0, max: 0, color: '#f0f9f0', label: '无写作' },
 		{ min: 1, max: 99, color: '#dcfce7', label: '少量写作' },
@@ -80,5 +112,24 @@ export const DEFAULT_SETTINGS: WordCountSettings = {
 	trackNumbers: true,
 	trackSpaces: false,
 	showWordCount: true,
-	enableCache: true
+	enableCache: false,
+	enableIMEDetection: true,
+	
+	// 写作目标默认设置
+	enableWritingGoals: true,
+	dailyWordGoal: 1000,
+	weeklyWordGoal: 7000,
+	monthlyWordGoal: 30000,
+	enableGoalReminders: false,
+	goalReminderTime: '20:00',
+	
+	
+	// 缓存默认设置
+	cacheMaxSize: 100,
+	cacheDefaultTTL: 300000, // 5分钟
+	
+	// 性能默认设置
+	debounceDelay: 150,
+	realTimeDebounceDelay: 200,
+	compositionDebounceDelay: 100
 };

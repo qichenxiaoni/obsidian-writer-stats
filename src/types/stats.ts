@@ -24,6 +24,8 @@ export interface CharChange {
 	total: number;
 }
 
+
+
 /**
  * 每日统计数据接口
  */
@@ -62,6 +64,42 @@ export interface StreakData {
 	longest: number;
 	/** 最后写作日期 */
 	lastDate: string;
+}
+
+/**
+ * 目标完成记录接口
+ */
+export interface GoalRecord {
+	/** 日期 */
+	date: string;
+	/** 目标类型 */
+	type: 'daily' | 'weekly' | 'monthly';
+	/** 目标字数 */
+	goal: number;
+	/** 实际字数 */
+	actual: number;
+	/** 完成率 */
+	completionRate: number;
+	/** 是否完成 */
+	completed: boolean;
+}
+
+/**
+ * 目标统计数据接口
+ */
+export interface GoalStats {
+	/** 每日目标完成率 */
+	dailyCompletionRate: number;
+	/** 每周目标完成率 */
+	weeklyCompletionRate: number;
+	/** 每月目标完成率 */
+	monthlyCompletionRate: number;
+	/** 连续完成目标天数 */
+	consecutiveGoalDays: number;
+	/** 最长连续完成目标天数 */
+	longestConsecutiveGoalDays: number;
+	/** 目标完成记录 */
+	goalRecords: GoalRecord[];
 }
 
 /**

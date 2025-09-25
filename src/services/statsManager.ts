@@ -4,13 +4,33 @@
 
 import { App } from 'obsidian';
 import { DailyStats, StreakData, CharChange, WordCountSettings, TextAnalysisResult } from '../types';
-import { getTodayString, getDaysDifference, CONSTANTS } from '../utils';
+import { getTodayString, getDaysDifference, CONSTANTS, debounce } from '../utils';
+import { CompressionService, CompressedDailyStats } from './compressionService';
+import { MemoryManager } from './memoryManager';
+import { DataAccessService } from './dataAccessService';
+import { errorHandler, ErrorLevel } from './errorHandler';
 
 export class StatsManager {
 	private dailyStats: Map<string, DailyStats> = new Map();
 	private streakData: StreakData = { current: 0, longest: 0, lastDate: '' };
+	private compressionService: CompressionService;
+	private memoryManager: MemoryManager;
+	private debouncedSaveData: () => void;
+	private dataAccess: DataAccessService;
 
-	constructor(private app: App, private settings: WordCountSettings) {}
+	constructor(private app: App, private settings: WordCountSettings) {
+		this.compressionService = new CompressionService();
+		this.memoryManager = new MemoryManager({
+			warningThreshold: CONSTANTS.MEMORY_WARNING_THRESHOLD,
+			dangerThreshold: CONSTANTS.MEMORY_DANGER_THRESHOLD,
+			maxCharChanges: CONSTANTS.MAX_CHAR_CHANGES,
+			maxCacheItems: CONSTANTS.MAX_CACHE_ITEMS
+		});
+		this.dataAccess = DataAccessService.getInstance(app, 'obsidian-writer-stats');
+		
+		// 创建防抖保存函数
+		this.debouncedSaveData = debounce(this.saveData.bind(this), 1000); // 1秒防抖
+	}
 
 	/**
 	 * 更新字数统计
@@ -18,62 +38,72 @@ export class StatsManager {
 	 * @param analysisResult 文本分析结果
 	 */
 	async updateWordCount(fileName: string, analysisResult: TextAnalysisResult): Promise<void> {
-		try {
+		await errorHandler.wrapAsync(async () => {
 			const today = getTodayString();
 			const existingStats = this.dailyStats.get(today) || this.createEmptyStats(today);
 
-			// 计算总字数（根据用户设置）
-			let charCount = 0;
-			if (this.settings.trackChinese) charCount += analysisResult.chinese;
-			if (this.settings.trackEnglish) charCount += analysisResult.english;
-			if (this.settings.trackPunctuation) charCount += analysisResult.punctuation;
-			if (this.settings.trackNumbers) charCount += analysisResult.numbers;
-			if (this.settings.trackSpaces) charCount += analysisResult.spaces;
+			// 计算当前文件的总字数（根据用户设置）
+			let currentFileCharCount = 0;
+			if (this.settings.trackChinese) currentFileCharCount += analysisResult.chinese;
+			if (this.settings.trackEnglish) currentFileCharCount += analysisResult.english;
+			if (this.settings.trackPunctuation) currentFileCharCount += analysisResult.punctuation;
+			if (this.settings.trackNumbers) currentFileCharCount += analysisResult.numbers;
+			if (this.settings.trackSpaces) currentFileCharCount += analysisResult.spaces;
 
-			const total = charCount || 0;
-			const completed = total > 0; // 只要有字数就算完成
+			// 查找该文件之前的字数记录
+			const previousChange = existingStats.charChanges
+				.filter(change => change.fileName === fileName)
+				.pop();
 
-			// 记录字符变化
-			const charChange: CharChange = {
-				timestamp: Date.now(),
-				action: 'add',
-				fileName,
-				chinese: analysisResult.chinese,
-				english: analysisResult.english,
-				punctuation: analysisResult.punctuation,
-				numbers: analysisResult.numbers,
-				spaces: analysisResult.spaces,
-				words: analysisResult.words,
-				total: total
-			};
+			// 计算字数变化
+			const wordCountChange = currentFileCharCount - (previousChange?.total || 0);
 
-			// 更新统计数据 - 增量更新而不是累加
-			existingStats.chinese = analysisResult.chinese;
-			existingStats.english = analysisResult.english;
-			existingStats.punctuation = analysisResult.punctuation;
-			existingStats.numbers = analysisResult.numbers;
-			existingStats.spaces = analysisResult.spaces;
-			existingStats.words = analysisResult.words;
-			existingStats.total = total;
-			existingStats.completed = completed;
+			// 只有当字数发生变化时才记录
+			if (wordCountChange !== 0) {
+				// 记录字符变化
+				const charChange: CharChange = {
+					timestamp: Date.now(),
+					action: wordCountChange > 0 ? 'add' : 'delete',
+					fileName,
+					chinese: analysisResult.chinese,
+					english: analysisResult.english,
+					punctuation: analysisResult.punctuation,
+					numbers: analysisResult.numbers,
+					spaces: analysisResult.spaces,
+					words: analysisResult.words,
+					total: currentFileCharCount
+				};
 
-			// 添加字符变化记录
-			existingStats.charChanges.push(charChange);
+				// 更新统计数据 - 累加字数变化
+				existingStats.chinese += (analysisResult.chinese - (previousChange?.chinese || 0));
+				existingStats.english += (analysisResult.english - (previousChange?.english || 0));
+				existingStats.punctuation += (analysisResult.punctuation - (previousChange?.punctuation || 0));
+				existingStats.numbers += (analysisResult.numbers - (previousChange?.numbers || 0));
+				existingStats.spaces += (analysisResult.spaces - (previousChange?.spaces || 0));
+				existingStats.words += (analysisResult.words - (previousChange?.words || 0));
+				existingStats.total += wordCountChange;
+				existingStats.completed = existingStats.total > 0; // 只要有字数就算完成
 
-			// 限制历史记录数量，避免数据过大
-			if (existingStats.charChanges.length > CONSTANTS.MAX_CHAR_CHANGES) {
-				existingStats.charChanges = existingStats.charChanges.slice(-CONSTANTS.MAX_CHAR_CHANGES);
-			}
+				// 添加字符变化记录
+				existingStats.charChanges.push(charChange);
 
-			this.dailyStats.set(today, existingStats);
-			await this.saveData();
+				// 限制历史记录数量，避免数据过大
+				if (existingStats.charChanges.length > CONSTANTS.MAX_CHAR_CHANGES) {
+					existingStats.charChanges = existingStats.charChanges.slice(-CONSTANTS.MAX_CHAR_CHANGES);
+				}
+
+				this.dailyStats.set(today, existingStats);
+				
+				// 使用防抖保存，避免频繁IO操作
+				this.debouncedSaveData();
 
 			// 更新连续写作数据
 			this.updateStreakData(today);
-		} catch (error) {
-			console.error('更新字数统计失败:', error);
-			throw error;
 		}
+		}, {
+			component: 'StatsManager',
+			operation: 'updateWordCount'
+		});
 	}
 
 	/**
@@ -93,7 +123,7 @@ export class StatsManager {
 			total: 0,
 			goal: 0, // 不再使用目标
 			completed: false,
-			charChanges: []
+			charChanges: [],
 		};
 	}
 
@@ -156,56 +186,86 @@ export class StatsManager {
 	 * 重置所有数据
 	 */
 	async resetData(): Promise<void> {
-		this.dailyStats.clear();
-		this.streakData = { current: 0, longest: 0, lastDate: '' };
-		await this.saveData();
+		await errorHandler.wrapAsync(async () => {
+			this.dailyStats.clear();
+			this.streakData = { current: 0, longest: 0, lastDate: '' };
+			await this.saveData();
+		}, {
+			component: 'StatsManager',
+			operation: 'resetData'
+		});
 	}
 
 	/**
-	 * 保存数据到插件存储
+	 * 保存数据到插件存储（使用压缩）
 	 */
 	private async saveData(): Promise<void> {
-		try {
-			// 通过插件实例保存数据
-			const plugin = (this.app as any).plugins.plugins['word-count-plugin'];
-			if (plugin) {
-				await plugin.saveData(Array.from(this.dailyStats.values()));
-			}
-		} catch (error) {
-			console.error('保存数据失败:', error);
-			throw error;
-		}
+		await errorHandler.wrapAsync(async () => {
+			// 清理过期数据
+			this.cleanupExpiredData();
+			
+			// 压缩数据
+			const compressedData = this.compressionService.compressDailyStatsArray(
+				Array.from(this.dailyStats.values())
+			);
+			
+			// 通过数据访问服务保存压缩数据，保留其他数据
+			const existingData = await this.dataAccess.loadData() || {};
+			existingData.dailyStats = compressedData;
+			await this.dataAccess.saveData(existingData);
+			
+			// 记录内存使用情况
+			this.logMemoryUsage();
+		}, {
+			component: 'StatsManager',
+			operation: 'saveData'
+		});
 	}
 
 	/**
-	 * 从插件存储加载数据 - 只加载启用插件后的数据
+	 * 从插件存储加载数据 - 支持压缩数据
 	 */
 	async loadData(): Promise<void> {
-		try {
-			// 通过插件实例加载数据
-			const plugin = (this.app as any).plugins.plugins['word-count-plugin'];
-			const historicalData = plugin ? await plugin.loadData() : null;
+		await errorHandler.wrapAsync(async () => {
+			// 通过数据访问服务加载数据
+			const pluginData = await this.dataAccess.loadData();
+			
+			// 获取每日统计数据
+			const historicalData = pluginData?.dailyStats || pluginData;
 			
 			if (Array.isArray(historicalData)) {
-				// 确保每个数据项都有必要的字段，并修复可能存在的null值
-				const validatedData = historicalData.map(item => ({
-					date: item.date || '',
-					chinese: item.chinese || 0,
-					english: item.english || 0,
-					punctuation: item.punctuation || 0,
-					numbers: item.numbers || 0,
-					spaces: item.spaces || 0,
-					words: item.words || 0,
-					total: item.total || 0,
-					goal: 0, // 不再使用目标
-					completed: item.completed || false,
-					charChanges: item.charChanges || []
-				}));
+				let validatedData: DailyStats[];
+				
+				// 检查是否为压缩数据
+				if (historicalData.length > 0 && this.isCompressedData(historicalData[0])) {
+					// 解压缩数据
+					validatedData = this.compressionService.decompressDailyStatsArray(
+						historicalData as CompressedDailyStats[]
+					);
+					console.log('加载并解压缩了数据');
+				} else {
+					// 兼容旧格式数据
+					validatedData = historicalData.map(item => ({
+						date: item.date || '',
+						chinese: item.chinese || 0,
+						english: item.english || 0,
+						punctuation: item.punctuation || 0,
+						numbers: item.numbers || 0,
+						spaces: item.spaces || 0,
+						words: item.words || 0,
+						total: item.total || 0,
+						goal: 0, // 不再使用目标
+						completed: item.completed || false,
+						charChanges: item.charChanges || [],
+						categoryStats: item.categoryStats || []
+					}));
+					console.log('加载了旧格式数据');
+				}
 				
 				// 只保留启用插件后的数据（从今天开始往前30天）
 				const today = new Date();
 				const thirtyDaysAgo = new Date(today);
-				thirtyDaysAgo.setDate(today.getDate() - 30);
+				thirtyDaysAgo.setDate(today.getDate() - CONSTANTS.LAZY_LOAD_INITIAL_DAYS);
 				
 				const filteredData = validatedData.filter(item => {
 					const itemDate = new Date(item.date);
@@ -214,11 +274,14 @@ export class StatsManager {
 				
 				this.dailyStats = new Map(filteredData.map(item => [item.date, item]));
 				console.log(`加载了 ${filteredData.length} 条启用插件后的数据`);
-			}
-		} catch (error) {
-			console.error('加载历史数据失败:', error);
-			throw error;
+				
+			// 记录内存使用情况
+			this.logMemoryUsage();
 		}
+		}, {
+			component: 'StatsManager',
+			operation: 'loadData'
+		});
 	}
 
 	/**
@@ -232,5 +295,70 @@ export class StatsManager {
 			stats.goal = 0; // 不再使用目标
 			stats.completed = stats.total > 0; // 只要有字数就算完成
 		}
+	}
+
+	/**
+	 * 检查是否为压缩数据
+	 * @param data 数据项
+	 * @returns 是否为压缩数据
+	 */
+	private isCompressedData(data: any): boolean {
+		return data && typeof data === 'object' && 'd' in data && 'c' in data && 'e' in data;
+	}
+
+	/**
+	 * 清理过期数据
+	 */
+	private cleanupExpiredData(): void {
+		const cutoffDate = new Date();
+		cutoffDate.setDate(cutoffDate.getDate() - CONSTANTS.LAZY_LOAD_MAX_DAYS);
+		
+		for (const [date, stats] of this.dailyStats) {
+			const statsDate = new Date(date);
+			if (statsDate < cutoffDate) {
+				this.dailyStats.delete(date);
+			} else {
+				// 清理过期的字符变化记录
+				stats.charChanges = this.memoryManager.cleanupOldCharChanges(
+					stats.charChanges,
+					CONSTANTS.CHAR_CHANGES_MAX_AGE
+				);
+				
+				// 限制字符变化记录数量
+				stats.charChanges = this.memoryManager.limitCharChanges(stats.charChanges);
+			}
+		}
+	}
+
+	/**
+	 * 记录内存使用情况
+	 */
+	private logMemoryUsage(): void {
+		const report = this.memoryManager.getMemoryReport(this.dailyStats);
+		
+		if (report.thresholdCheck.isWarning) {
+			console.warn('内存使用警告:', report);
+		}
+		
+		if (report.thresholdCheck.isDanger) {
+			console.error('内存使用危险:', report);
+		}
+	}
+
+	/**
+	 * 获取内存使用报告
+	 * @returns 内存使用报告
+	 */
+	getMemoryReport() {
+		return this.memoryManager.getMemoryReport(this.dailyStats);
+	}
+
+	/**
+	 * 手动清理内存
+	 */
+	async cleanupMemory(): Promise<void> {
+		this.cleanupExpiredData();
+		await this.saveData();
+		console.log('内存清理完成');
 	}
 }

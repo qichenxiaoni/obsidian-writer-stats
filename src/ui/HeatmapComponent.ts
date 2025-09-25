@@ -5,7 +5,8 @@
 import { App, Notice } from 'obsidian';
 import { WordCountSettings } from '../types';
 import { DailyStats } from '../types/stats';
-import { formatNumber, calculatePercentage } from '../utils';
+import { formatNumber, calculatePercentage, CONSTANTS } from '../utils';
+import { LazyLoadService } from '../services/lazyLoadService';
 
 export interface HeatmapData {
 	date: string;
@@ -22,6 +23,8 @@ export class HeatmapComponent {
 	private currentZoom: number;
 	private zoomContainer: HTMLElement | null = null;
 	private hideControlsTimer: number | null = null;
+	private lazyLoadService: LazyLoadService;
+	private isLoadingMore: boolean = false;
 
 	constructor(
 		app: App,
@@ -33,8 +36,22 @@ export class HeatmapComponent {
 		this.settings = settings;
 		this.dailyStats = dailyStats;
 		this.container = container;
-		this.currentDays = 30; // 固定显示最近30天
+		this.currentDays = CONSTANTS.LAZY_LOAD_INITIAL_DAYS; // 使用常量
 		this.currentZoom = this.settings.heatmapDefaultZoom || 1.0;
+		
+		// 初始化懒加载服务
+		this.lazyLoadService = new LazyLoadService({
+			initialDays: CONSTANTS.LAZY_LOAD_INITIAL_DAYS,
+			incrementDays: CONSTANTS.LAZY_LOAD_INCREMENT_DAYS,
+			maxDays: CONSTANTS.LAZY_LOAD_MAX_DAYS,
+			preloadDays: CONSTANTS.LAZY_LOAD_PRELOAD_DAYS
+		});
+		
+		// 注册懒加载回调
+		this.lazyLoadService.onDataUpdate((data) => {
+			this.dailyStats = data;
+			this.render();
+		});
 		
 		console.log('HeatmapComponent 初始化:', {
 			currentDays: this.currentDays,

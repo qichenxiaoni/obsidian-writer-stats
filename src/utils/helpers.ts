@@ -155,3 +155,95 @@ export function safeJsonParse<T>(jsonString: string, defaultValue: T): T {
 		return defaultValue;
 	}
 }
+
+/**
+ * 获取本周的日期字符串 (YYYY-WW)
+ * @param date 日期对象
+ * @returns 周字符串
+ */
+export function getWeekString(date: Date): string {
+	const year = date.getFullYear();
+	const week = getWeekNumber(date);
+	return `${year}-W${week.toString().padStart(2, '0')}`;
+}
+
+/**
+ * 获取日期是当年的第几周
+ * @param date 日期对象
+ * @returns 周数
+ */
+export function getWeekNumber(date: Date): number {
+	const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+	const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
+	return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+}
+
+/**
+ * 获取本月的日期字符串 (YYYY-MM)
+ * @param date 日期对象
+ * @returns 月字符串
+ */
+export function getMonthString(date: Date): string {
+	const year = date.getFullYear();
+	const month = (date.getMonth() + 1).toString().padStart(2, '0');
+	return `${year}-${month}`;
+}
+
+/**
+ * 格式化时长显示
+ * @param seconds 秒数
+ * @returns 格式化的时长字符串
+ */
+export function formatDuration(seconds: number): string {
+	const hours = Math.floor(seconds / 3600);
+	const minutes = Math.floor((seconds % 3600) / 60);
+	const remainingSeconds = seconds % 60;
+
+	if (hours > 0) {
+		return `${hours}小时${minutes}分钟`;
+	} else if (minutes > 0) {
+		return `${minutes}分钟${remainingSeconds}秒`;
+	} else {
+		return `${remainingSeconds}秒`;
+	}
+}
+
+/**
+ * 格式化效率显示
+ * @param efficiency 效率（字数/分钟）
+ * @returns 格式化的效率字符串
+ */
+export function formatEfficiency(efficiency: number): string {
+	return `${efficiency.toFixed(1)} 字/分钟`;
+}
+
+
+/**
+ * 获取文件路径的文件夹部分
+ * @param filePath 文件路径
+ * @returns 文件夹路径
+ */
+export function getFolderPath(filePath: string): string {
+	const lastSlashIndex = filePath.lastIndexOf('/');
+	return lastSlashIndex === -1 ? '/' : filePath.substring(0, lastSlashIndex);
+}
+
+/**
+ * 获取文件路径的文件名部分
+ * @param filePath 文件路径
+ * @returns 文件名
+ */
+export function getFileName(filePath: string): string {
+	const lastSlashIndex = filePath.lastIndexOf('/');
+	return lastSlashIndex === -1 ? filePath : filePath.substring(lastSlashIndex + 1);
+}
+
+/**
+ * 检查时间字符串是否有效
+ * @param timeString 时间字符串 (HH:MM)
+ * @returns 是否有效
+ */
+export function isValidTimeString(timeString: string): boolean {
+	const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+	return timeRegex.test(timeString);
+}
