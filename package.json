@@ -6,7 +6,9 @@
     "scripts": {
         "dev": "node esbuild.config.mjs",
         "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-        "check": "tsc --noEmit -skipLibCheck"
+        "check": "tsc --noEmit -skipLibCheck",
+        "test": "jest",
+        "test:watch": "jest --watch"
     },
     "keywords": [
         "obsidian",
@@ -17,10 +19,13 @@
     "author": "",
     "license": "MIT",
     "devDependencies": {
+        "@types/jest": "^30.0.0",
         "@types/node": "^22.0.0",
         "builtin-modules": "^5.3.0",
         "esbuild": "^0.28.2",
+        "jest": "^30.5.1",
         "obsidian": "latest",
+        "ts-jest": "^29.4.12",
         "typescript": "^5.9.3"
     }
 }
