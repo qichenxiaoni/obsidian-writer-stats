@@ -1,4 +1,5 @@
 import type { CountResult } from "../domain/CountResult";
+import { createEmptyCount } from "./CountMath";
 
 export interface CountDelta {
   added: CountResult;
@@ -6,17 +7,17 @@ export interface CountDelta {
   net: CountResult;
 }
 
-function createEmptyCount(): CountResult {
-  return {
-    chinese: 0,
-    englishWords: 0,
-    englishChars: 0,
-    numbers: 0,
-    punctuation: 0,
-    spaces: 0,
-    total: 0
-  };
-}
+// function createEmptyCount(): CountResult {
+//   return {
+//     chinese: 0,
+//     englishWords: 0,
+//     englishChars: 0,
+//     numbers: 0,
+//     punctuation: 0,
+//     spaces: 0,
+//     total: 0
+//   };
+// }
 
 export function diffCounts(
   previous: CountResult,
