@@ -2,9 +2,12 @@ import { Notice, Plugin } from "obsidian";
 import { ActivityTracker } from "./core/ActivityTracker";
 import { JsonStatsRepository } from "./persistence/JsonStatsRepository";
 import { ObsidianPluginDataStore } from "./persistence/ObsidianPluginDataStore";
+import { TextAnalyzer } from "./core/TextAnalyzer";
+import { EditorEventController } from "./events/EditorEventController";
 
 export default class WordCountPlugin extends Plugin {
     private activityTracker!: ActivityTracker;
+    private editorEvents!: EditorEventController;
 
     async onload(): Promise<void> {
         console.log("Word Count Plugin v1 loaded");
@@ -13,6 +16,11 @@ export default class WordCountPlugin extends Plugin {
         const repository = new JsonStatsRepository(dataStore);
 
         this.activityTracker = new ActivityTracker(repository);
+
+        const analyze = new TextAnalyzer();
+
+        this.editorEvents = new EditorEventController(this,analyze,this.activityTracker);
+        this.editorEvents.start();
 
         this.addCommand({
             id: "show-word-count-test-nitice",
@@ -38,6 +46,8 @@ export default class WordCountPlugin extends Plugin {
     }
 
     onunload(): void {
+        this.editorEvents?.stop();
+        
         console.log("Word Count Plugin v1 unloaded");
     }
 }

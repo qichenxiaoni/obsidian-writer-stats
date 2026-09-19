@@ -200,4 +200,44 @@ describe("ActivityTracker", () => {
         expect(snapshot?.counts.total).toBe(125);
         expect(snapshot?.modifiedAt).toBe(2000);
     });
+
+    test("ensureBaseline 只创建 snapshotot，不创建 daily activity", async () => {
+        const repository = new MemoryStatsRepository();
+
+        const tracker = new ActivityTracker(repository);
+
+        await tracker.ensureBaseline(
+            "A.md",
+            1000,
+            makeCount(100)
+        );
+
+        const snapshot = await repository.getSnapshot("A.md");
+        const activity = await repository.getActivity("2026-09-19", "A.md");
+
+        expect(snapshot?.counts.total).toBe(100);
+        expect(activity).toBeUndefined();
+    });
+
+    test("建立基线后的第一次编辑可以正确统计", async () => {
+        const repository = new MemoryStatsRepository();
+        const tracker = new ActivityTracker(repository);
+
+        await tracker.ensureBaseline(
+            "A.md",
+            1000,
+            makeCount(100)
+        );
+
+        const activity = await tracker.track(
+            "2026-09-19",
+            "A.md",
+            2000,
+            makeCount(101)
+        );
+
+        expect(activity.start.total).toBe(100);
+        expect(activity.added.total).toBe(1);
+        expect(activity.net.total).toBe(1);
+    });
 });

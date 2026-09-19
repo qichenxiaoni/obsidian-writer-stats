@@ -14,6 +14,28 @@ export class ActivityTracker {
         private readonly repository: StatsRepository
     ) {}
 
+    async ensureBaseline(
+        filePath: string,
+        modifiedAt: number,
+        currentCounts: CountResult
+    ): Promise<FileSnapshot> {
+        const existing = await this.repository.getSnapshot(filePath);
+
+        if (existing) {
+            return existing;
+        }
+
+        const snapshot: FileSnapshot = {
+            path: filePath,
+            modifiedAt,
+            counts: currentCounts
+        };
+
+        await this.repository.saveSnapshot(snapshot);
+
+        return snapshot;
+    }
+
     async track(
         date: string,
         filePath: string,
