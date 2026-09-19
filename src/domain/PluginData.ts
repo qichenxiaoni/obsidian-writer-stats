@@ -18,3 +18,32 @@ export function createEmptyPluginData(): PluginData {
         dailyActivities: {}
     };
 }
+
+export function normalizePluginData(
+    value: unknown
+): PluginData {
+    if (typeof value !== "object" || value === null){
+        return createEmptyPluginData();
+    }
+
+    const raw = value as Partial<PluginData>;
+
+    return {
+        schemaVersion:
+            typeof raw.schemaVersion === "number"
+                ? raw.schemaVersion
+                : CURRENT_SCHEMA_VERSION,
+        
+        fileSnapshots:
+            raw.fileSnapshots &&
+            typeof raw.fileSnapshots === "object"
+                ? raw.fileSnapshots
+                : {},
+        
+        dailyActivities:
+            raw.dailyActivities &&
+            typeof raw.dailyActivities === "object"
+                ? raw.dailyActivities
+                : {}
+    };
+}
