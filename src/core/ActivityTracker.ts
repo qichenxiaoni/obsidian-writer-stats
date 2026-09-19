@@ -1,6 +1,7 @@
 import type { CountResult } from "../domain/CountResult";
 import type { DailyFileActivity } from "../domain/DailyFileActivity";
 import type { FileSnapshot } from "../domain/FileSnapshot";
+import type { StatsRepository } from "src/persistence/StatsRepository";
 
 import { diffCounts } from "./CountDiff";
 import {
@@ -9,25 +10,17 @@ import {
 } from "./CountMath";
 
 export class ActivityTracker {
-    private readonly snapshots = new Map<string, FileSnapshot>();
+    constructor(
+        private readonly repository: StatsRepository
+    ) {}
 
-    private readonly activities =
-        new Map<string, DailyFileActivity>();
-
-    track(
+    async track(
         date: string,
         filePath: string,
         modifiedAt: number,
         currentCounts: CountResult
-    ): DailyFileActivity {
-        const snapshotKey = filePath;
-        const activityKey = this.createActivityKey(
-            date,
-            filePath
-        );
-
-        const previousSnapshot =
-            this.snapshots.get(snapshotKey);
+    ): Promise<DailyFileActivity> {
+        const previousSnapshot = await this.repository.getSnapshot(filePath);
 
         // 第一次看到这个文件：
         // 只建立基线，不把整个文件算成“今天新增”
@@ -38,25 +31,18 @@ export class ActivityTracker {
                 counts: currentCounts
             };
 
-            this.snapshots.set(
-                snapshotKey,
-                snapshot
-            );
+            await this.repository.saveSnapshot(snapshot);
 
             const activity: DailyFileActivity = {
                 date,
                 filePath,
                 start: currentCounts,
-
                 added: createEmptyCount(),
                 deleted: createEmptyCount(),
                 net: createEmptyCount()
             };
 
-            this.activities.set(
-                activityKey,
-                activity
-            );
+            await this.repository.saveActivity(activity);
 
             return activity;
         }
@@ -66,24 +52,26 @@ export class ActivityTracker {
             currentCounts
         );
 
-        let activity =
-            this.activities.get(activityKey);
-
-        // 文件之前就有 snapshot，
-        // 但今天第一次发生编辑
+        let activity = 
+            await this.repository.getActivity(
+                date,
+                filePath
+            );
+        
+        // 有历史 snapshot，
+        // 但今天第一次编辑此文件。
         if (!activity) {
             activity = {
                 date,
                 filePath,
                 start: previousSnapshot.counts,
-
                 added: createEmptyCount(),
                 deleted: createEmptyCount(),
                 net: createEmptyCount()
             };
         }
 
-        const updatedActivity: DailyFileActivity = {
+        const updateActivity: DailyFileActivity = {
             ...activity,
 
             added: addCounts(
@@ -102,39 +90,32 @@ export class ActivityTracker {
             )
         };
 
-        this.activities.set(
-            activityKey,
-            updatedActivity
+        await this.repository.saveActivity(
+            updateActivity
         );
 
-        this.snapshots.set(snapshotKey, {
+        await this.repository.saveSnapshot({
             path: filePath,
             modifiedAt,
             counts: currentCounts
         });
 
-        return updatedActivity;
+        return updateActivity;
     }
 
-    getActivity(
+    async getActivity(
         date: string,
         filePath: string
-    ): DailyFileActivity | undefined {
-        return this.activities.get(
-            this.createActivityKey(date, filePath)
+    ): Promise<DailyFileActivity | undefined> {
+        return this.repository.getActivity(
+            date,
+            filePath
         );
     }
 
-    getSnapshot(
+    async getSnapshot(
         filePath: string
-    ): FileSnapshot | undefined {
-        return this.snapshots.get(filePath);
-    }
-
-    private createActivityKey(
-        date: string,
-        filePath: string
-    ): string {
-        return `${date}:${filePath}`;
+    ): Promise<FileSnapshot | undefined> {
+        return this.repository.getSnapshot(filePath);
     }
 }
