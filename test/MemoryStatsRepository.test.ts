@@ -142,36 +142,53 @@ describe("MemoryStatsRepository", () => {
         ).toBeDefined();
     });
 
-    test("deleteFile 会删除相关数据", async () => {
-        const repository =
-            new MemoryStatsRepository();
+    test(
+        "removeSnapshot 只删除 snapshot，并保留历史 activity",
+        async () => {
+            const repository =
+                new MemoryStatsRepository();
 
-        await repository.saveSnapshot({
-            path: "A.md",
-            modifiedAt: 1000,
-            counts: makeCount(100)
-        });
+            await repository.saveSnapshot({
+                path: "A.md",
+                modifiedAt: 1000,
+                counts: makeCount(100)
+            });
 
-        await repository.saveActivity({
-            date: "2026-09-17",
-            filePath: "A.md",
-            start: makeCount(100),
-            added: makeCount(20),
-            deleted: makeCount(0),
-            net: makeCount(20)
-        });
+            await repository.saveActivity({
+                date: "2026-09-20",
+                filePath: "A.md",
+                start: makeCount(100),
+                added: makeCount(20),
+                deleted: makeCount(0),
+                net: makeCount(20)
+            });
 
-        await repository.deleteFile("A.md");
-
-        expect(
-            await repository.getSnapshot("A.md")
-        ).toBeUndefined();
-
-        expect(
-            await repository.getActivity(
-                "2026-09-17",
+            await repository.removeSnapshot(
                 "A.md"
-            )
-        ).toBeUndefined();
-    });
+            );
+
+            const snapshot =
+                await repository.getSnapshot(
+                    "A.md"
+                );
+
+            const activity =
+                await repository.getActivity(
+                    "2026-09-20",
+                    "A.md"
+                );
+
+            expect(snapshot)
+                .toBeUndefined();
+
+            expect(activity)
+                .toBeDefined();
+
+            expect(activity?.added.total)
+                .toBe(20);
+
+            expect(activity?.net.total)
+                .toBe(20);
+        }
+    );
 });

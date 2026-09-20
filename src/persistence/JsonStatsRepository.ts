@@ -129,25 +129,12 @@ export class JsonStatsRepository
         await this.store.save(data);
     }
 
-    async deleteFile(
+    async removeSnapshot(
         filePath: string
     ): Promise<void> {
         const data = await this.loadData();
 
         delete data.fileSnapshots[filePath];
-
-        for (
-            const [key, activity]
-            of Object.entries(
-                data.dailyActivities
-            )
-        ) {
-            if (
-                activity.filePath === filePath
-            ) {
-                delete data.dailyActivities[key];
-            }
-        }
 
         await this.store.save(data);
     }
@@ -164,5 +151,25 @@ export class JsonStatsRepository
         filePath: string
     ): string {
         return `${date}:${filePath}`;
+    }
+
+    async saveTrackingResult(
+        snapshot: FileSnapshot, 
+        activity: DailyFileActivity
+    ): Promise<void> {
+        const data = await this.loadData();
+
+        data.fileSnapshots[
+            snapshot.path
+        ] = snapshot;
+
+        data.dailyActivities[
+            this.createActivityKey(
+                activity.date,
+                activity.filePath
+            )
+        ] = activity;
+
+        await this.store.save(data);
     }
 }

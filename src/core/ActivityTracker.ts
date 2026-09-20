@@ -12,14 +12,17 @@ import {
 export class ActivityTracker {
     constructor(
         private readonly repository: StatsRepository
-    ) {}
+    ) { }
 
     async ensureBaseline(
         filePath: string,
         modifiedAt: number,
         currentCounts: CountResult
     ): Promise<FileSnapshot> {
-        const existing = await this.repository.getSnapshot(filePath);
+        const existing =
+            await this.repository.getSnapshot(
+                filePath
+            );
 
         if (existing) {
             return existing;
@@ -31,7 +34,9 @@ export class ActivityTracker {
             counts: currentCounts
         };
 
-        await this.repository.saveSnapshot(snapshot);
+        await this.repository.saveSnapshot(
+            snapshot
+        );
 
         return snapshot;
     }
@@ -55,6 +60,12 @@ export class ActivityTracker {
 
             await this.repository.saveSnapshot(snapshot);
 
+            const existingActivity = await this.repository.getActivity(date, filePath);
+
+            if (existingActivity) {
+                return existingActivity;
+            }
+
             const activity: DailyFileActivity = {
                 date,
                 filePath,
@@ -74,12 +85,12 @@ export class ActivityTracker {
             currentCounts
         );
 
-        let activity = 
+        let activity =
             await this.repository.getActivity(
                 date,
                 filePath
             );
-        
+
         // 有历史 snapshot，
         // 但今天第一次编辑此文件。
         if (!activity) {
@@ -93,7 +104,7 @@ export class ActivityTracker {
             };
         }
 
-        const updateActivity: DailyFileActivity = {
+        const updatedActivity: DailyFileActivity = {
             ...activity,
 
             added: addCounts(
@@ -112,17 +123,18 @@ export class ActivityTracker {
             )
         };
 
-        await this.repository.saveActivity(
-            updateActivity
-        );
-
-        await this.repository.saveSnapshot({
+        const updatedSnapshot: FileSnapshot = {
             path: filePath,
             modifiedAt,
             counts: currentCounts
-        });
+        };
 
-        return updateActivity;
+        await this.repository.saveTrackingResult(
+            updatedSnapshot,
+            updatedActivity
+        );
+
+        return updatedActivity;
     }
 
     async getActivity(

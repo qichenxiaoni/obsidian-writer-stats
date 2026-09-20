@@ -78,7 +78,7 @@ describe("ActivityTracker", () => {
             makeCount(130)
         );
 
-        const activity =  await tracker.track(
+        const activity = await tracker.track(
             "2026-09-18",
             "A.md",
             3000,
@@ -119,7 +119,7 @@ describe("ActivityTracker", () => {
         expect(activity.net.total).toBe(50);
     });
 
-    test("不同日期的 activity 相互独立",  async () => {
+    test("不同日期的 activity 相互独立", async () => {
         const tracker = createTracker();
 
         await tracker.track(
@@ -240,4 +240,99 @@ describe("ActivityTracker", () => {
         expect(activity.added.total).toBe(1);
         expect(activity.net.total).toBe(1);
     });
+
+    test(
+        "同一天删除后重新创建同路径文件会继续使用当天 activity",
+        async () => {
+            const repository =
+                new MemoryStatsRepository();
+
+            const tracker =
+                new ActivityTracker(repository);
+
+            // 第一份 A.md 的 baseline
+            await tracker.ensureBaseline(
+                "A.md",
+                1000,
+                makeCount(100)
+            );
+
+            // 第一份 A.md 新增 20
+            await tracker.track(
+                "2026-09-20",
+                "A.md",
+                2000,
+                makeCount(120)
+            );
+
+            // 删除文件，只删除 snapshot
+            await repository.removeSnapshot(
+                "A.md"
+            );
+
+            // 同一天重新创建新的 A.md
+            await tracker.ensureBaseline(
+                "A.md",
+                3000,
+                makeCount(50)
+            );
+
+            // 新文件继续新增 10
+            const activity =
+                await tracker.track(
+                    "2026-09-20",
+                    "A.md",
+                    4000,
+                    makeCount(60)
+                );
+
+            expect(activity.added.total)
+                .toBe(30);
+
+            expect(activity.deleted.total)
+                .toBe(0);
+
+            expect(activity.net.total)
+                .toBe(30);
+        }
+    );
+
+    test(
+        "没有 snapshot 时不得覆盖同一天已有 activity",
+        async () => {
+            const repository =
+                new MemoryStatsRepository();
+
+            const tracker =
+                new ActivityTracker(repository);
+
+            // 模拟当天已有历史 activity
+            await repository.saveActivity({
+                date: "2026-09-20",
+                filePath: "A.md",
+
+                start: makeCount(100),
+                added: makeCount(20),
+                deleted: makeCount(0),
+                net: makeCount(20)
+            });
+
+            // 当前没有 snapshot，
+            // 相当于文件被删除后重新创建
+            const activity =
+                await tracker.track(
+                    "2026-09-20",
+                    "A.md",
+                    2000,
+                    makeCount(50)
+                );
+
+            // 不能被新的零 activity 覆盖
+            expect(activity.added.total)
+                .toBe(20);
+
+            expect(activity.net.total)
+                .toBe(20);
+        }
+    );
 });

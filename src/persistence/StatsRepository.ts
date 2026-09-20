@@ -28,7 +28,12 @@ export interface StatsRepository {
         newPath: string,
     ): Promise<void>;
 
-    deleteFile(
+    removeSnapshot(
         filePath: string
+    ): Promise<void>;
+
+    saveTrackingResult(
+        snapshot: FileSnapshot,
+        activity: DailyFileActivity
     ): Promise<void>;
 }

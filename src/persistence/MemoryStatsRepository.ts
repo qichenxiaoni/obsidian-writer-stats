@@ -47,7 +47,7 @@ export class MemoryStatsRepository implements StatsRepository {
 
         if (snapshot) {
             this.snapshots.delete(oldPath);
-            
+
             this.snapshots.set(
                 newPath,
                 {
@@ -84,17 +84,8 @@ export class MemoryStatsRepository implements StatsRepository {
         }
     }
 
-    async deleteFile(filePath: string): Promise<void> {
+    async removeSnapshot(filePath: string): Promise<void> {
         this.snapshots.delete(filePath);
-
-        for (
-            const [key , activity]
-            of this.activities.entries()
-        ){
-            if (activity.filePath === filePath) {
-                this.activities.delete(key);
-            }
-        }
     }
 
     private createActivityKey(
@@ -102,5 +93,23 @@ export class MemoryStatsRepository implements StatsRepository {
         filePath: string
     ): string {
         return `${date}:${filePath}`;
+    }
+
+    async saveTrackingResult(
+        snapshot: FileSnapshot,
+        activity: DailyFileActivity
+    ): Promise<void> {
+        this.snapshots.set(
+            snapshot.path,
+            snapshot
+        );
+
+        this.activities.set(
+            this.createActivityKey(
+                activity.date,
+                activity.filePath
+            ),
+            activity
+        );
     }
 }

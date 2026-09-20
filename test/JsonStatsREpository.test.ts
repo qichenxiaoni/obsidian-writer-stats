@@ -1,6 +1,11 @@
 import { JsonStatsRepository } from "../src/persistence/JsonStatsRepository";
 import { MemoryPluginDataStore } from "../src/persistence/MemoryPluginDataStore";
 import type { CountResult } from "../src/domain/CountResult";
+import { createEmptyPluginData } from "../src/domain/PluginData";
+import type { PluginData } from
+    "../src/domain/PluginData";
+import type { PluginDataStore } from
+    "../src/persistence/PluginDataStore";
 
 function makeCount(
     total: number
@@ -14,6 +19,24 @@ function makeCount(
         spaces: 0,
         total
     };
+}
+
+// 专门用于验证底层 save调用了几次
+class CountingStore implements PluginDataStore {
+    saveCount = 0;
+
+    private data = createEmptyPluginData();
+
+    async load(): Promise<PluginData> {
+        return structuredClone(this.data);
+    }
+
+    async save(
+        data: PluginData
+    ): Promise<void> {
+        this.saveCount++;
+        this.data = structuredClone(data);
+    }
 }
 
 describe("JsonStatsRepository", () => {
@@ -46,7 +69,7 @@ describe("JsonStatsRepository", () => {
             net: makeCount(15)
         });
 
-        const activity = await repository.getActivity("2026-09-19","A.md");
+        const activity = await repository.getActivity("2026-09-19", "A.md");
 
         expect(activity?.added.total).toBe(20);
         expect(activity?.net.total).toBe(15);
@@ -87,35 +110,113 @@ describe("JsonStatsRepository", () => {
             net: makeCount(20)
         });
 
-        await repository.renameFile("Old.md","New.md");
+        await repository.renameFile("Old.md", "New.md");
 
         expect(await repository.getSnapshot("Old.md")).toBeUndefined();
         expect(await repository.getSnapshot("New.md")).toBeDefined();
-        expect(await repository.getActivity("2026-09-19","New.md")).toBeDefined();
+        expect(await repository.getActivity("2026-09-19", "New.md")).toBeDefined();
     });
 
-    test("deleFile 会清理相关数据", async () => {
+    test(
+        "removeSnapshot 只删除 snapshot，并保留历史 activity",
+        async () => {
+            const store =
+                new MemoryPluginDataStore();
+
+            const repository =
+                new JsonStatsRepository(store);
+
+            await repository.saveSnapshot({
+                path: "A.md",
+                modifiedAt: 1000,
+                counts: makeCount(100)
+            });
+
+            await repository.saveActivity({
+                date: "2026-09-19",
+                filePath: "A.md",
+                start: makeCount(100),
+                added: makeCount(20),
+                deleted: makeCount(0),
+                net: makeCount(20)
+            });
+
+            await repository.removeSnapshot(
+                "A.md"
+            );
+
+            const snapshot =
+                await repository.getSnapshot(
+                    "A.md"
+                );
+
+            const activity =
+                await repository.getActivity(
+                    "2026-09-19",
+                    "A.md"
+                );
+
+            expect(snapshot)
+                .toBeUndefined();
+
+            expect(activity)
+                .toBeDefined();
+
+            expect(activity?.added.total)
+                .toBe(20);
+
+            expect(activity?.net.total)
+                .toBe(20);
+        }
+    );
+
+    test("saveTrackingResult 同时保存 snapshot 和 activity", async () => {
         const store = new MemoryPluginDataStore();
         const repository = new JsonStatsRepository(store);
 
-        await repository.saveSnapshot({
-            path: "A.md",
-            modifiedAt: 1000,
-            counts: makeCount(100)
-        });
+        await repository.saveTrackingResult(
+            {
+                path: "A.md",
+                modifiedAt: 2000,
+                counts: makeCount(120)
+            },
+            {
+                date: "2026-09-19",
+                filePath: "A.md",
+                start: makeCount(100),
+                added: makeCount(20),
+                deleted: makeCount(0),
+                net: makeCount(20)
+            }
+        );
 
-        await repository.saveActivity({
-            date: "2026-09-19",
-            filePath: "A.md",
-            start: makeCount(100),
-            added: makeCount(20),
-            deleted: makeCount(0),
-            net: makeCount(20)
-        });
+        const snapshot = await repository.getSnapshot("A.md");
+        const activity = await repository.getActivity("2026-09-19", "A.md");
 
-        await repository.deleteFile("A.md");
+        expect(snapshot?.counts.total).toBe(120);
+        expect(activity?.added.total).toBe(20);
+    })
 
-        expect(await repository.getSnapshot("A.md")).toBeUndefined();
-        expect(await repository.getActivity("2026-09-19","A.md")).toBeUndefined();
+    test("saveTrackingResult 只执行一次底层 svae", async () => {
+        const store = new CountingStore();
+        const repository = new JsonStatsRepository(store);
+
+        await repository.saveTrackingResult(
+            {
+                path: "A.md",
+                modifiedAt: 2000,
+                counts: makeCount(120)
+            },
+            {
+                date: "2026-09-19",
+                filePath: "A.md",
+                start: makeCount(100),
+                added: makeCount(20),
+                deleted: makeCount(0),
+                net: makeCount(20)
+            }
+        );
+
+        expect(store.saveCount).toBe(1);
     });
 });
