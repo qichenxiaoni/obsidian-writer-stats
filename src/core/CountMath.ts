@@ -1,4 +1,4 @@
-import type { CountResult } from "src/domain/CountResult";
+import type { CountResult } from "../domain/CountResult";
 
 export function createEmptyCount(): CountResult {
     return {

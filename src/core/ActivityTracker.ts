@@ -1,7 +1,7 @@
 import type { CountResult } from "../domain/CountResult";
 import type { DailyFileActivity } from "../domain/DailyFileActivity";
 import type { FileSnapshot } from "../domain/FileSnapshot";
-import type { StatsRepository } from "src/persistence/StatsRepository";
+import type { StatsRepository } from "../persistence/StatsRepository";
 
 import { diffCounts } from "./CountDiff";
 import {

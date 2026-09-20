@@ -5,9 +5,9 @@ import {
     TFile
 } from "obsidian";
 
-import { ActivityTracker } from "src/core/ActivityTracker";
-import { TextAnalyzer } from "src/core/TextAnalyzer";
-import { getLocalDateKey } from "src/utils/DateService";
+import { ActivityTracker } from "../core/ActivityTracker";
+import { TextAnalyzer } from "../core/TextAnalyzer";
+import { getLocalDateKey } from "../utils/DateService";
 
 const EDIT_DEBOUNCE_MS = 500;
 

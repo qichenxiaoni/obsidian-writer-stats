@@ -1,5 +1,5 @@
 import { Plugin, TFile} from "obsidian";
-import type { StatsRepository } from "src/persistence/StatsRepository";
+import type { StatsRepository } from "../persistence/StatsRepository";
 
 export class VaultEventController {
     constructor(

@@ -1,5 +1,5 @@
-import type { DailyFileActivity } from "src/domain/DailyFileActivity";
-import type { FileSnapshot } from "src/domain/FileSnapshot";
+import type { DailyFileActivity } from "../domain/DailyFileActivity";
+import type { FileSnapshot } from "../domain/FileSnapshot";
 import type { StatsRepository } from "./StatsRepository";
 
 export class MemoryStatsRepository implements StatsRepository {

@@ -1,4 +1,4 @@
-import type { PluginData } from "src/domain/PluginData";
+import type { PluginData } from "../domain/PluginData";
 
 export interface PluginDataStore {
     load(): Promise<PluginData>;
