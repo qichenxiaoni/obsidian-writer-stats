@@ -6,12 +6,16 @@ import { TextAnalyzer } from "./core/TextAnalyzer";
 import { EditorEventController } from "./events/EditorEventController";
 import { VaultEventController } from "./events/VaultEventController";
 import type { StatsRepository } from "./persistence/StatsRepository";
+import { DailyStatsService } from "./core/DailyStatsService";
+import { StatusBarController } from "./ui/StatusBarController";
 
 export default class WordCountPlugin extends Plugin {
     private activityTracker!: ActivityTracker;
     private editorEvents!: EditorEventController;
     private repository!: StatsRepository;
     private vaultEvents!: VaultEventController;
+    private dailyStatsService!: DailyStatsService;
+    private statusBar!: StatusBarController;
 
     async onload(): Promise<void> {
         console.log("Word Count Plugin v1 loaded");
@@ -20,10 +24,24 @@ export default class WordCountPlugin extends Plugin {
         
         this.repository = new JsonStatsRepository(dataStore);
         this.activityTracker = new ActivityTracker(this.repository);
+        this.dailyStatsService = new DailyStatsService(this.repository);
+        this.statusBar = new StatusBarController(this,this.dailyStatsService);
+        this.statusBar.start();
 
         const analyze = new TextAnalyzer();
 
-        this.editorEvents = new EditorEventController(this,analyze,this.activityTracker);
+        // this.editorEvents = new EditorEventController(this,analyze,this.activityTracker);
+        this.editorEvents = new EditorEventController(
+            this,
+            analyze,
+            this.activityTracker,
+
+            async date => {
+                await this.statusBar.refresh(
+                    date
+                ); 
+            }
+        )
         this.editorEvents.start();
 
         this.vaultEvents = new VaultEventController(this,this.repository);
@@ -54,6 +72,7 @@ export default class WordCountPlugin extends Plugin {
 
     onunload(): void {
         this.editorEvents?.stop();
+        this.statusBar?.stop();
 
         console.log("Word Count Plugin v1 unloaded");
     }

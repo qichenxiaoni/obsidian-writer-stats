@@ -12,19 +12,24 @@ import { getLocalDateKey } from "../utils/DateService";
 const EDIT_DEBOUNCE_MS = 500;
 
 export class EditorEventController {
-    private readonly timers = new Map<string,number>();
+    private readonly timers = new Map<string, number>();
 
     constructor(
         private readonly plugin: Plugin,
         private readonly analyzer: TextAnalyzer,
-        private readonly tracker: ActivityTracker
-    ) {}
+        private readonly tracker: ActivityTracker,
+
+        private readonly onActivityUpdated?:
+            (
+                date: string
+            ) => Promise<void> | void
+    ) { }
 
     start(): void {
         this.initializeOpenMarkdownFiles();
         this.plugin.registerEvent(
             this.plugin.app.workspace.on(
-                "file-open",file => {
+                "file-open", file => {
                     if (!file) {
                         return;
                     }
@@ -36,15 +41,15 @@ export class EditorEventController {
 
         this.plugin.registerEvent(
             this.plugin.app.workspace.on(
-                "editor-change",(editor,info) => {
+                "editor-change", (editor, info) => {
                     const file = info.file;
 
-                    if(!file) {
+                    if (!file) {
                         return;
                     }
 
                     this.scheduleEditorChange(
-                        editor,file
+                        editor, file
                     );
                 }
             )
@@ -71,7 +76,7 @@ export class EditorEventController {
 
             const file = view.file;
 
-            if (!file){
+            if (!file) {
                 continue;
             }
 
@@ -84,7 +89,7 @@ export class EditorEventController {
     ): Promise<void> {
         const content = await this.plugin.app.vault.cachedRead(file);
         const counts = this.analyzer.analyze(content);
-        await this.tracker.ensureBaseline(file.path,file.stat.mtime,counts);
+        await this.tracker.ensureBaseline(file.path, file.stat.mtime, counts);
     }
 
     private scheduleEditorChange(
@@ -100,10 +105,10 @@ export class EditorEventController {
         const timer = window.setTimeout(() => {
             this.timers.delete(file.path);
 
-            void this.processEditorChange(editor,file);
+            void this.processEditorChange(editor, file);
         }, EDIT_DEBOUNCE_MS);
 
-        this.timers.set(file.path,timer);
+        this.timers.set(file.path, timer);
     }
 
     private async processEditorChange(
@@ -114,6 +119,7 @@ export class EditorEventController {
         const counts = this.analyzer.analyze(text);
         const date = getLocalDateKey();
 
-        await this.tracker.track(date,file.path,Date.now(),counts);
+        await this.tracker.track(date, file.path, Date.now(), counts);
+        await this.onActivityUpdated?.(date);
     }
 }
