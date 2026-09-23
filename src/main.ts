@@ -8,6 +8,8 @@ import { VaultEventController } from "./events/VaultEventController";
 import type { StatsRepository } from "./persistence/StatsRepository";
 import { DailyStatsService } from "./core/DailyStatsService";
 import { StatusBarController } from "./ui/StatusBarController";
+import { StatisticsModal } from "./ui/StatisticsModal";
+
 
 export default class WordCountPlugin extends Plugin {
     private activityTracker!: ActivityTracker;
@@ -25,7 +27,12 @@ export default class WordCountPlugin extends Plugin {
         this.repository = new JsonStatsRepository(dataStore);
         this.activityTracker = new ActivityTracker(this.repository);
         this.dailyStatsService = new DailyStatsService(this.repository);
-        this.statusBar = new StatusBarController(this,this.dailyStatsService);
+        this.statusBar = new StatusBarController(this,this.dailyStatsService, () => {
+            new StatisticsModal(
+                this.app,
+                this.dailyStatsService
+            ).open();
+        });
         this.statusBar.start();
 
         const analyze = new TextAnalyzer();
@@ -66,6 +73,18 @@ export default class WordCountPlugin extends Plugin {
                         ? `测试数据存在: ${snapshot.counts.total}`
                         : "当前没有测试统计数据"
                 );
+            }
+        });
+
+        this.addCommand({
+            id: "open-daily-writing-statistics",
+            name: "打开今日写作统计",
+
+            callback: () => {
+                new StatisticsModal(
+                    this.app,
+                    this.dailyStatsService
+                ).open();
             }
         });
     }

@@ -10,12 +10,30 @@ export class StatusBarController {
 
     constructor(
         private readonly plugin: Plugin,
-        private readonly statsService: DailyStatsService
+        private readonly statsService: DailyStatsService,
+
+        private readonly onClick?:
+            () => void
     ) { }
 
     start(): void {
         this.element = this.plugin.addStatusBarItem();
         this.element.addClass("writer-stats-status-bar");
+
+        if (this.onClick) {
+            this.element.addClass(
+                "wirter-stats-status-bar--clickable"
+            );
+
+            this.plugin.registerDomEvent(
+                this.element,
+                "click",
+                () => {
+                    this.onClick?.();
+                }
+            );
+        }
+
         this.element.textContent = "今日 +0 · 净增0";
 
         void this.refresh();

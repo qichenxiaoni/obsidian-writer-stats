@@ -157,4 +157,74 @@ describe("DailyStatsService", () => {
         expect(summary.net.total).toBe(70);
         expect(summary.activeFiles).toBe(2)
     });
+
+    test(
+        "getActivities 过滤没有实际变化的文件",
+        async () => {
+            const repository = new MemoryStatsRepository();
+
+            await repository.saveActivity({
+                date: "2026-09-21",
+                filePath: "Empty.md",
+                start: makeCount(100),
+                added: makeCount(0),
+                deleted: makeCount(0),
+                net: makeCount(0)
+            });
+
+            await repository.saveActivity({
+                date: "2026-09-21",
+                filePath: "Writing.md",
+                start: makeCount(100),
+                added: makeCount(20),
+                deleted: makeCount(5),
+                net: makeCount(15)
+            });
+
+            const service = new DailyStatsService(repository);
+
+            const activities = await service.getActivities(
+                "2026-09-21"
+            );
+
+            expect(activities).toHaveLength(1);
+
+            expect(activities[0].filePath).toBe("Writing.md");
+        }
+    );
+
+    test(
+        "getActivities 按新增数量从高到低排序",
+        async () => {
+            const repository = new MemoryStatsRepository();
+
+            await repository.saveActivity({
+                date: "2026-09-21",
+                filePath: "Small.md",
+                start: makeCount(100),
+                added: makeCount(10),
+                deleted: makeCount(0),
+                net: makeCount(10)
+            });
+
+            await repository.saveActivity({
+                date: "2026-09-21",
+                filePath: "Large.md",
+                start: makeCount(100),
+                added: makeCount(50),
+                deleted: makeCount(5),
+                net: makeCount(45)
+            });
+
+            const service = new DailyStatsService(repository);
+
+            const activities = await service.getActivities(
+                "2026-09-21"
+            );
+
+            expect(activities[0].filePath).toBe("Large.md");
+            
+            expect(activities[1].filePath).toBe("Small.md");
+        }
+    );
 });

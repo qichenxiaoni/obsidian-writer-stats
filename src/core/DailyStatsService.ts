@@ -72,4 +72,22 @@ export class DailyStatsService {
         return Object.values(counts)
             .some(value => value !== 0);
     }
+
+    async getActivities(
+        date: string
+    ): Promise<DailyFileActivity[]> {
+        const activities =
+            await this.repository
+                .getActivitiesForDate(date);
+
+        return activities
+            .filter(activity =>
+                this.hasActivity(activity)
+            )
+            .sort(
+                (a, b) =>
+                    b.added.total -
+                    a.added.total
+            );
+    }
 }
