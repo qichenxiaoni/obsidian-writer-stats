@@ -3,6 +3,9 @@ import {
     createEmptyPluginData,
     normalizePluginData
 } from "../src/domain/PluginData";
+import {
+    DEFAULT_PLUGIN_SETTINGS
+} from "../src/domain/PluginSettings";
 
 describe("PluginData", () => {
     test(
@@ -14,6 +17,10 @@ describe("PluginData", () => {
             expect(data).toEqual({
                 schemaVersion:
                     CURRENT_SCHEMA_VERSION,
+                
+                settings: {
+                    ...DEFAULT_PLUGIN_SETTINGS
+                },
 
                 fileSnapshots: {},
                 dailyActivities: {}
@@ -83,6 +90,41 @@ describe("PluginData", () => {
                 data.fileSnapshots["A.md"]
                     .counts.total
             ).toBe(10);
+        }
+    );
+
+    test (
+        "旧数据缺少 settings 时自动补充默认设置",
+        () => {
+            const data =
+                normalizePluginData({
+                    schemaVersion: 1,
+                    fileSnapshots: {},
+                    dailyActivities: {}
+                });
+
+            expect(
+                data.settings.dailyGoal
+            ).toBe(1000);
+        }
+    );
+
+    test(
+        "已有 dailyGoal 会被保留",
+        () => {
+            const data = 
+                normalizePluginData({
+                    schemaVersion: 1,
+                    settings: {
+                        dailyGoal: 1500
+                    },
+                    fileSnapshots: {},
+                    dailyActivities: {}
+                });
+
+            expect(
+                data.settings.dailyGoal
+            ).toBe(1500);
         }
     );
 });
