@@ -90,4 +90,24 @@ export class DailyStatsService {
                     a.added.total
             );
     }
+
+    async getFileActivity(
+        date: string,
+        filePath: string
+    ): Promise<DailyFileActivity | undefined> {
+        const activity = await this.repository.getActivity(
+            date,
+            filePath
+        );
+
+        if (!activity) {
+            return undefined;
+        }
+
+        if (!this.hasActivity(activity)) {
+            return undefined;
+        }
+
+        return activity;
+    }
 }

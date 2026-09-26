@@ -201,3 +201,61 @@
       space-between;
   }
 }
+
+/* Writer Stats - Current File */
+
+.writer-stats-modal__section {
+  margin-top: 22px;
+}
+
+.writer-stats-modal__file-current {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+  background: var(--background-secondary);
+  padding: 12px;
+}
+
+/* Writer Stats - File Links */
+.writer-stats-modal__file-link {
+  appearance: none;
+  display: inline-block;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-normal);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.writer-stats-modal__file-link:hover {
+  color: var(--text-accent);
+  text-decoration: underline;
+}
+
+/* Missing / deleted file */
+
+.writer-stats-modal__file-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.writer-stats-modal__file-missing {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--background-modifier-error);
+  color: var(--text-on-accent);
+  font-size: var(--font-ui-smaller);
+}
+
+/* Empty state */
+.writer-stats-modal__empty--compact {
+  padding: 8px 0 4px;
+}

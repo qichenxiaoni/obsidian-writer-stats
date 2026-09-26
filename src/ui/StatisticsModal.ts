@@ -1,4 +1,4 @@
-import { App, Modal} from "obsidian";
+import { App, Modal, TFile } from "obsidian";
 import type { DailyStatsService } from "../core/DailyStatsService";
 import type { DailyFileActivity } from "../domain/DailyFileActivity";
 import { getLocalDateKey } from "../utils/DateService";
@@ -40,9 +40,13 @@ export class StatisticsModal extends Modal {
     }
 
     private async render(): Promise<void> {
+        const activeFile =
+            this.app.workspace.getActiveFile();
+
         const [
             summary,
-            activities
+            activities,
+            currentActivity
         ] = await Promise.all([
             this.statsService.getSummary(
                 this.date
@@ -50,7 +54,14 @@ export class StatisticsModal extends Modal {
 
             this.statsService.getActivities(
                 this.date
-            )
+            ),
+
+            activeFile
+                ? this.statsService.getFileActivity(
+                    this.date,
+                    activeFile.path
+                )
+                : Promise.resolve(undefined)
         ]);
 
         const {
@@ -61,17 +72,23 @@ export class StatisticsModal extends Modal {
 
         // 日期
         contentEl.createDiv({
-            cls: "writer-stats-modal__date",
-            text: this.formatDate(
-                this.date
-            )
+            cls:
+                "writer-stats-modal__date",
+
+            text:
+                this.formatDate(this.date)
         });
 
-        // Summary
 
-        const summaryGrid = contentEl.createDiv({
-            cls: "writer-stats-modal__summary"
-        });
+        // =========================
+        // 今日摘要
+        // =========================
+
+        const summaryGrid =
+            contentEl.createDiv({
+                cls:
+                    "writer-stats-modal__summary"
+            });
 
         this.createMetric(
             summaryGrid,
@@ -98,14 +115,63 @@ export class StatisticsModal extends Modal {
         this.createMetric(
             summaryGrid,
             "活跃文件",
-            String(summary.activeFiles)
+            String(
+                summary.activeFiles
+            )
         );
 
-        // File activities
 
-        const section = contentEl.createDiv({
-            cls: "writer-stats-modal__section"
-        });
+        // =========================
+        // 当前文件
+        // =========================
+
+        if (activeFile) {
+            const currentSection =
+                contentEl.createDiv({
+                    cls:
+                        "writer-stats-modal__section"
+                });
+
+            currentSection.createEl(
+                "h3",
+                {
+                    text: "当前文件"
+                }
+            );
+
+            if (currentActivity) {
+                const currentList =
+                    currentSection.createDiv({
+                        cls:
+                            "writer-stats-modal__files"
+                    });
+
+                this.createActivityRow(
+                    currentList,
+                    currentActivity,
+                    true
+                );
+            } else {
+                currentSection.createDiv({
+                    cls:
+                        "writer-stats-modal__empty writer-stats-modal__empty--compact",
+
+                    text:
+                        "当前文件今天暂无写作活动"
+                });
+            }
+        }
+
+
+        // =========================
+        // 今日文件
+        // =========================
+
+        const section =
+            contentEl.createDiv({
+                cls:
+                    "writer-stats-modal__section"
+            });
 
         section.createEl(
             "h3",
@@ -114,18 +180,25 @@ export class StatisticsModal extends Modal {
             }
         );
 
-        if (activities.length === 0) {
+        if (
+            activities.length === 0
+        ) {
             section.createDiv({
-                cls: "writer-stats-modal__empty",
-                text: "今天还没有记录到写作活动"
+                cls:
+                    "writer-stats-modal__empty",
+
+                text:
+                    "今天还没有记录到写作活动"
             });
 
             return;
         }
 
-        const list = section.createDiv({
-            cls: "writer-stats-modal__files"
-        });
+        const list =
+            section.createDiv({
+                cls:
+                    "writer-stats-modal__files"
+            });
 
         for (
             const activity
@@ -133,7 +206,8 @@ export class StatisticsModal extends Modal {
         ) {
             this.createActivityRow(
                 list,
-                activity
+                activity,
+                false
             );
         }
     }
@@ -143,11 +217,11 @@ export class StatisticsModal extends Modal {
         label: string,
         value: string
     ): void {
-        const card = 
+        const card =
             container.createDiv({
                 cls: "writer-stats-modal__mertic"
             });
-        
+
         // 先显示指标名称
         card.createDiv({
             cls: "writer-stats-modal__metric-label",
@@ -163,28 +237,73 @@ export class StatisticsModal extends Modal {
 
     private createActivityRow(
         container: HTMLElement,
-        activity: DailyFileActivity
+        activity: DailyFileActivity,
+        isCurrentFile: boolean
     ): void {
         const row =
             container.createDiv({
                 cls: "writer-stats-modal__file"
             });
         
-        const main = 
+        if (isCurrentFile) {
+            row.addClass(
+                "writer-stats-modal__file--current"
+            );
+        }
+
+        const main =
             row.createDiv({
                 cls: "writer-stats-modal__file-main"
             });
+        
+        const file = 
+            this.app.vault
+                .getAbstractFileByPath(
+                    activity.filePath
+                );
+        
+        if (file instanceof TFile) {
+            const name = 
+                main.createEl(
+                    "button",
+                    {
+                        cls: 
+                            "writer-stats-modal__file-name writer-stats-modal__file-link",
+                        text: activity.filePath
+                    }
+                );
+            
+            name.addEventListener(
+                "click",
+                () => {
+                    void this.openFile(file);
+                }
+            );
+        } else {
+            const nameRow = 
+                main.createDiv({
+                    cls: 
+                        "writer-stats-modal__file-name-row"
+                });
+            
+            nameRow.createSpan({
+                cls: 
+                    "writer-stats-modal__file-name",
+                text: activity.filePath
+            });
 
-        main.createDiv({
-            cls: "writer-stats-modal__file-name",
-            text: activity.filePath
-        });
+            nameRow.createSpan({
+                cls: 
+                    "writer-stats-modal__file-missing",
+                text: "已删除"
+            });
+        }
 
-        const stats = 
+        const stats =
             row.createDiv({
                 cls: "writer-stats-modal__file-stats"
             });
-        
+
         this.createSmallStat(
             stats,
             "新增",
@@ -248,9 +367,19 @@ export class StatisticsModal extends Modal {
         ] = date.split("-");
 
         return (
-            `${year}年` + 
-            `${Number(month)}月` + 
+            `${year}年` +
+            `${Number(month)}月` +
             `${Number(day)}日`
         );
+    }
+
+    private async openFile(
+        file: TFile
+    ): Promise<void> {
+        await this.app.workspace
+            .getLeaf(false)
+            .openFile(file)
+        
+        this.close();
     }
 }

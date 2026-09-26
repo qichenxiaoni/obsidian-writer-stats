@@ -227,4 +227,50 @@ describe("DailyStatsService", () => {
             expect(activities[1].filePath).toBe("Small.md");
         }
     );
+
+    test("getFileActivity 返回指定文件当天的活动", async () => {
+        const repository = new MemoryStatsRepository();
+
+        await repository.saveActivity({
+            date: "2026-09-23",
+            filePath: "Writing.md",
+            start: makeCount(100),
+            added: makeCount(30),
+            deleted: makeCount(5),
+            net: makeCount(25)
+        });
+
+        const service = new DailyStatsService(repository);
+
+        const activity = await service.getFileActivity(
+            "2026-09-23",
+            "Writing.md"
+        );
+
+        expect(activity).toBeDefined();
+        expect(activity?.added.total).toBe(30);
+        expect(activity?.net.total).toBe(25);
+    });
+
+    test("getFileActivity 对零变化文件返回 undefined", async () => {
+        const repository = new MemoryStatsRepository();
+
+        await repository.saveActivity({
+            date: "2026-09-23",
+            filePath: "Idle.md",
+            start: makeCount(100),
+            added: makeCount(0),
+            deleted: makeCount(0),
+            net: makeCount(0)
+        });
+
+        const service = new DailyStatsService(repository);
+
+        const activity = await service.getFileActivity(
+            "2026-09-23",
+            "Idle.md"
+        );
+
+        expect(activity).toBeUndefined();
+    });
 });
