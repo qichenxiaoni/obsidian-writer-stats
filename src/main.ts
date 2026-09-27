@@ -9,7 +9,8 @@ import type { StatsRepository } from "./persistence/StatsRepository";
 import { DailyStatsService } from "./core/DailyStatsService";
 import { StatusBarController } from "./ui/StatusBarController";
 import { StatisticsModal } from "./ui/StatisticsModal";
-
+import { PluginSettingsService } from "./core/PluginSettingsService";
+import { WriterStatsSettingTab } from "./ui/WriterStatsSettingTab";
 
 export default class WordCountPlugin extends Plugin {
     private activityTracker!: ActivityTracker;
@@ -18,12 +19,18 @@ export default class WordCountPlugin extends Plugin {
     private vaultEvents!: VaultEventController;
     private dailyStatsService!: DailyStatsService;
     private statusBar!: StatusBarController;
+    private settingsService!: PluginSettingsService;
 
     async onload(): Promise<void> {
         console.log("Word Count Plugin v1 loaded");
 
         const dataStore = new ObsidianPluginDataStore(this);
         
+        this.settingsService = 
+            new PluginSettingsService(
+                dataStore
+            );
+
         this.repository = new JsonStatsRepository(dataStore);
         this.activityTracker = new ActivityTracker(this.repository);
         this.dailyStatsService = new DailyStatsService(this.repository);
@@ -87,6 +94,14 @@ export default class WordCountPlugin extends Plugin {
                 ).open();
             }
         });
+
+        this.addSettingTab(
+            new WriterStatsSettingTab(
+                this.app,
+                this,
+                this.settingsService
+            )
+        );
     }
 
     onunload(): void {
