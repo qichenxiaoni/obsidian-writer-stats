@@ -19,6 +19,14 @@ export class StatusBarController {
     start(): void {
         this.element = this.plugin.addStatusBarItem();
         this.element.addClass("writer-stats-status-bar");
+        this.element.setAttr(
+            "data-tooltip-position",
+            "top"
+        );
+        this.element.setAttr(
+            "data-tooltip-delay",
+            "200"
+        );
 
         if (this.onClick) {
             this.element.addClass(
@@ -60,15 +68,42 @@ export class StatusBarController {
             await this.overviewService
                 .getOverview(date);
 
+        const tooltip =
+            formatGoalStatusBarTooltip(
+                overview
+            );
+
         this.element.textContent =
             formatGoalStatusBarText(
                 overview
             );
 
-        this.element.title =
-            formatGoalStatusBarTooltip(
-                overview
-            );
+        // this.element.title =
+        //     formatGoalStatusBarTooltip(
+        //         overview
+        //     );
+
+        // 使用 Obsidian 自己的 tooltip 机制
+        this.element.setAttr(
+            "aria-label",
+            tooltip
+        );
+
+        this.element.setAttr(
+            "data-tooltip-position",
+            "top"
+        );
+
+        this.element.setAttr(
+            "data-tooltip-delay",
+            "200"
+        );
+
+        // 防止 native title 与 obsidian tooltip 重复
+        this.element.setAttr(
+            "title",
+            null
+        );
     }
 
     stop(): void {
