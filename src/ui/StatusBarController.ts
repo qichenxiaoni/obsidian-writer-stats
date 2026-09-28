@@ -1,7 +1,7 @@
 import type { Plugin } from "obsidian";
-import type { DailyStatsService } from "../core/DailyStatsService";
+import type { DailyOverviewService } from "../core/DailyOverviewService";
 import { getLocalDateKey } from "../utils/DateService";
-import { formatStatusBarText, formatStatusBarTooltip } from "./StatusBarFormatter";
+import { formatGoalStatusBarText, formatGoalStatusBarTooltip } from "./StatusBarFormatter";
 
 const DATE_CHECK_INTERVAL_MS = 60_000;
 
@@ -10,7 +10,7 @@ export class StatusBarController {
 
     constructor(
         private readonly plugin: Plugin,
-        private readonly statsService: DailyStatsService,
+        private readonly overviewService: DailyOverviewService,
 
         private readonly onClick?:
             () => void
@@ -34,7 +34,7 @@ export class StatusBarController {
             );
         }
 
-        this.element.textContent = "今日 +0 · 净增0";
+        this.element.textContent = "今日 +0 / 0 · 0%";
 
         void this.refresh();
 
@@ -49,16 +49,26 @@ export class StatusBarController {
     }
 
     async refresh(
-        date: string = getLocalDateKey()
+        date: string =
+            getLocalDateKey()
     ): Promise<void> {
         if (!this.element) {
             return;
         }
 
-        const summary = await this.statsService.getSummary(date);
+        const overview =
+            await this.overviewService
+                .getOverview(date);
 
-        this.element.textContent = formatStatusBarText(summary);
-        this.element.title = formatStatusBarTooltip(summary);
+        this.element.textContent =
+            formatGoalStatusBarText(
+                overview
+            );
+
+        this.element.title =
+            formatGoalStatusBarTooltip(
+                overview
+            );
     }
 
     stop(): void {

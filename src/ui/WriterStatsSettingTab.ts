@@ -17,7 +17,10 @@ export class WriterStatsSettingTab
         plugin: Plugin,
 
         private readonly settingsService:
-            PluginSettingsService
+            PluginSettingsService,
+
+        private readonly onSettingsChanged?:
+            () => Promise<void> | void
     ) {
         super(
             app,
@@ -122,6 +125,8 @@ export class WriterStatsSettingTab
         const settings = 
             await this.settingsService
                 .setDailyGoal(value);
+
+        await this.onSettingsChanged?.();
 
         input.value = 
             String(

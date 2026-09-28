@@ -1,10 +1,13 @@
 import {
     formatStatusBarText,
-    formatStatusBarTooltip
+    formatStatusBarTooltip,
+    formatGoalStatusBarText,
+    formatGoalStatusBarTooltip
 } from "../src/ui/StatusBarFormatter";
 
 import type { DailySummary } from
     "../src/domain/DailySummary";
+import { DailyOverview } from "../src/domain/DailyOverview";
 
 
 function makeSummary(
@@ -135,5 +138,80 @@ describe(
                     );
             }
         );
+
+        test(
+            "正确格式化每日目标状态栏",
+            () => {
+                const overview: DailyOverview = {
+                    summary:
+                        makeSummary(
+                            638,
+                            126,
+                            512,
+                            3
+                        ),
+
+                    goal: {
+                        current: 638,
+                        goal: 1500,
+                        remaining: 862,
+                        percentage: 43,
+                        completed: false
+                    }
+                };
+
+                expect(
+                    formatGoalStatusBarText(
+                        overview
+                    )
+                ).toBe(
+                    "今日 +638 / 1500 · 43%"
+                );
+            }
+        );
+
+
+        test(
+            "目标 tooltip 包含进度信息",
+            () => {
+                const overview: DailyOverview = {
+                    summary:
+                        makeSummary(
+                            638,
+                            126,
+                            512,
+                            3
+                        ),
+
+                    goal: {
+                        current: 638,
+                        goal: 1500,
+                        remaining: 862,
+                        percentage: 43,
+                        completed: false
+                    }
+                };
+
+                const tooltip =
+                    formatGoalStatusBarTooltip(
+                        overview
+                    );
+
+                expect(tooltip)
+                    .toContain(
+                        "每日目标：1500"
+                    );
+
+                expect(tooltip)
+                    .toContain(
+                        "完成进度：43%"
+                    );
+
+                expect(tooltip)
+                    .toContain(
+                        "还差：862"
+                    );
+            }
+        );
     }
-);
+)

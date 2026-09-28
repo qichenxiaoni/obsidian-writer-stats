@@ -11,6 +11,8 @@ import { StatusBarController } from "./ui/StatusBarController";
 import { StatisticsModal } from "./ui/StatisticsModal";
 import { PluginSettingsService } from "./core/PluginSettingsService";
 import { WriterStatsSettingTab } from "./ui/WriterStatsSettingTab";
+import { GoalService } from "./core/GoalService";
+import { DailyOverviewService } from "./core/DailyOverviewService";
 
 export default class WordCountPlugin extends Plugin {
     private activityTracker!: ActivityTracker;
@@ -20,6 +22,8 @@ export default class WordCountPlugin extends Plugin {
     private dailyStatsService!: DailyStatsService;
     private statusBar!: StatusBarController;
     private settingsService!: PluginSettingsService;
+    private goalService!: GoalService;
+    private dailyOverviewService!: DailyOverviewService;
 
     async onload(): Promise<void> {
         console.log("Word Count Plugin v1 loaded");
@@ -34,7 +38,14 @@ export default class WordCountPlugin extends Plugin {
         this.repository = new JsonStatsRepository(dataStore);
         this.activityTracker = new ActivityTracker(this.repository);
         this.dailyStatsService = new DailyStatsService(this.repository);
-        this.statusBar = new StatusBarController(this,this.dailyStatsService, () => {
+        this.goalService = new GoalService();
+        this.dailyOverviewService =
+            new DailyOverviewService(
+                this.dailyStatsService,
+                this.settingsService,
+                this.goalService
+            );
+        this.statusBar = new StatusBarController(this,this.dailyOverviewService, () => {
             new StatisticsModal(
                 this.app,
                 this.dailyStatsService
@@ -99,7 +110,11 @@ export default class WordCountPlugin extends Plugin {
             new WriterStatsSettingTab(
                 this.app,
                 this,
-                this.settingsService
+                this.settingsService,
+
+                async () => {
+                    await this.statusBar.refresh();
+                }
             )
         );
     }
