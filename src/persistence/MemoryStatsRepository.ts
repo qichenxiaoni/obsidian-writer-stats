@@ -112,4 +112,17 @@ export class MemoryStatsRepository implements StatsRepository {
             activity
         );
     }
+
+    async getActivitiesBetween(
+        startDate: string,
+        endDate: string
+    ): Promise<DailyFileActivity[]> {
+        return Array.from(
+            this.activities.values()
+        ).filter(
+            activity =>
+                activity.date >= startDate &&
+                activity.date <= endDate
+        );
+    }
 }

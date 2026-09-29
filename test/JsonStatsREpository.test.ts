@@ -219,4 +219,73 @@ describe("JsonStatsRepository", () => {
 
         expect(store.saveCount).toBe(1);
     });
+
+    test(
+        "getActivitiesBetween 返回日期返回内的 activity，并包含起止日期",
+        async () => {
+            const store =
+                new MemoryPluginDataStore();
+
+            const repository =
+                new JsonStatsRepository(
+                    store
+                );
+
+            await repository.saveActivity({
+                date: "2026-09-27",
+                filePath: "A.md",
+                start: makeCount(0),
+                added: makeCount(10),
+                deleted: makeCount(0),
+                net: makeCount(10)
+            });
+
+            await repository.saveActivity({
+                date: "2026-09-28",
+                filePath: "B.md",
+                start: makeCount(0),
+                added: makeCount(20),
+                deleted: makeCount(0),
+                net: makeCount(20)
+            });
+
+            await repository.saveActivity({
+                date: "2026-09-29",
+                filePath: "C.md",
+                start: makeCount(0),
+                added: makeCount(30),
+                deleted: makeCount(0),
+                net: makeCount(30)
+            });
+
+            await repository.saveActivity({
+                date: "2026-09-30",
+                filePath: "D.md",
+                start: makeCount(0),
+                added: makeCount(40),
+                deleted: makeCount(0),
+                net: makeCount(40)
+            });
+
+            const result =
+                await repository
+                    .getActivitiesBetween(
+                        "2026-09-28",
+                        "2026-09-29"
+                    );
+
+            expect(result).toHaveLength(2);
+
+            expect(
+                result
+                    .map(activity => 
+                        activity.filePath
+                    )
+                    .sort()
+            ).toEqual([
+                "B.md",
+                "C.md"
+            ]);
+        }
+    );
 });

@@ -154,7 +154,7 @@ export class JsonStatsRepository
     }
 
     async saveTrackingResult(
-        snapshot: FileSnapshot, 
+        snapshot: FileSnapshot,
         activity: DailyFileActivity
     ): Promise<void> {
         const data = await this.loadData();
@@ -171,5 +171,21 @@ export class JsonStatsRepository
         ] = activity;
 
         await this.store.save(data);
+    }
+
+    async getActivitiesBetween(
+        startDate: string,
+        endDate: string
+    ): Promise<DailyFileActivity[]> {
+        const data =
+            await this.store.load();
+
+        return Object.values(
+            data.dailyActivities
+        ).filter(
+            activity =>
+                activity.date >= startDate &&
+                activity.date <= endDate
+        );
     }
 }

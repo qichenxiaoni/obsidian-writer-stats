@@ -36,4 +36,9 @@ export interface StatsRepository {
         snapshot: FileSnapshot,
         activity: DailyFileActivity
     ): Promise<void>;
+
+    getActivitiesBetween(
+        startDate: string,
+        endDate: string
+    ): Promise<DailyFileActivity[]>;
 }
