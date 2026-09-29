@@ -48,7 +48,8 @@ export default class WordCountPlugin extends Plugin {
         this.statusBar = new StatusBarController(this,this.dailyOverviewService, () => {
             new StatisticsModal(
                 this.app,
-                this.dailyStatsService
+                this.dailyStatsService,
+                this.dailyOverviewService
             ).open();
         });
         this.statusBar.start();
@@ -101,7 +102,8 @@ export default class WordCountPlugin extends Plugin {
             callback: () => {
                 new StatisticsModal(
                     this.app,
-                    this.dailyStatsService
+                    this.dailyStatsService,
+                    this.dailyOverviewService
                 ).open();
             }
         });

@@ -2,11 +2,14 @@ import { App, Modal, TFile } from "obsidian";
 import type { DailyStatsService } from "../core/DailyStatsService";
 import type { DailyFileActivity } from "../domain/DailyFileActivity";
 import { getLocalDateKey } from "../utils/DateService";
+import type { DailyOverviewService } from "../core/DailyOverviewService";
+import type { GoalProgress } from "../domain/GoalProgress";
 
 export class StatisticsModal extends Modal {
     constructor(
         app: App,
         private readonly statsService: DailyStatsService,
+        private readonly overviewService: DailyOverviewService,
         private readonly date: string = getLocalDateKey()
     ) {
         super(app);
@@ -44,11 +47,11 @@ export class StatisticsModal extends Modal {
             this.app.workspace.getActiveFile();
 
         const [
-            summary,
+            overview,
             activities,
             currentActivity
         ] = await Promise.all([
-            this.statsService.getSummary(
+            this.overviewService.getOverview(
                 this.date
             ),
 
@@ -63,6 +66,11 @@ export class StatisticsModal extends Modal {
                 )
                 : Promise.resolve(undefined)
         ]);
+
+        const {
+            summary,
+            goal
+        } = overview;
 
         const {
             contentEl
@@ -118,6 +126,11 @@ export class StatisticsModal extends Modal {
             String(
                 summary.activeFiles
             )
+        );
+
+        this.createGoalSection(
+            contentEl,
+            goal
         );
 
 
@@ -381,5 +394,82 @@ export class StatisticsModal extends Modal {
             .openFile(file)
         
         this.close();
+    }
+
+    private createGoalSection(
+        container: HTMLElement,
+        goal: GoalProgress
+    ): void {
+        const section =
+            container.createDiv({
+                cls: 
+                    "writer-stats-modal__goal"
+            });
+
+        const header = 
+            section.createDiv({
+                cls:
+                    "writer-stats-modal__goal-header"
+            });
+
+        header.createSpan({
+            cls:
+                "writer-stats-modal__goal-title",
+            text: 
+                "今日目标"
+        });
+
+        header.createSpan({
+            cls:
+                "writer-stats-modal__goal-percentage",
+            text:
+                `${goal.percentage}%`
+        });
+
+        const numbers =
+            section.createDiv({
+                cls:
+                    "writer-stats-modal__goal-numbers"
+            });
+
+        numbers.createSpan({
+            text:
+                `${goal.current} / ${goal.goal}`
+        });
+
+        // 进度条
+        const track =
+            section.createDiv({
+                cls:
+                    "writer-stats-modal__goal-track"
+            });
+
+        const bar =
+            track.createDiv({
+                cls:
+                    "writer-stats-modal__goal-bar"
+            });
+
+        // 视觉宽度最高100%，但 percentage 本身就可以继续超过100
+        const visualPercentage =
+            Math.min(
+                goal.percentage,
+                100
+            );
+        
+        bar.style.width =
+            `${visualPercentage}%`;
+
+        const footer =
+            section.createDiv({
+                cls: 
+                    "writer-stats-modal__goal-footer"
+            });
+
+        footer.setText(
+            goal.completed
+                ? `今日目标已完成 · ${goal.percentage}%`
+                : `还差 ${goal.remaining}`
+        );
     }
 }
