@@ -242,9 +242,52 @@ export class DailyHistoryService {
             );
 
         return history.filter(
-            entry => 
+            entry =>
                 entry.added > 0 ||
                 entry.deleted > 0
         ).length;
+    }
+
+    async getWritingStreak(
+        startDate: string,
+        endDate: string
+    ): Promise<number> {
+        const history =
+            await this.getHistory(
+                startDate,
+                endDate
+            );
+
+        let streak = 0;
+
+        /*
+        * getHistory() 已经保证：
+        *
+        * 1. 日期是连续的
+        * 2. 没有活动的日期会补成 0
+        * 3. 日期按照从早到晚排列
+        *
+        * 所以这里只需要从最后一天
+        * 向前检查即可。
+        */
+
+        for (
+            let index = history.length -1;
+            index >= 0;
+            index--
+        ) {
+            const entry =
+                history[index];
+
+            // added > 0
+
+            if (entry.added <= 0){
+                break;
+            }
+
+            streak++;
+        }
+
+        return streak;
     }
 }

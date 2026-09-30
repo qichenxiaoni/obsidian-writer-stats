@@ -194,5 +194,161 @@ describe(
                     .toBe(2)
             }
         );
+
+        test (
+            "写作中断后重新开始时，只统计当前连续写作天数",
+            async () => {
+                const repository =
+                    new MemoryStatsRepository();
+
+                // 09-27写作日
+                await repository.saveActivity({
+                    date: "2026-09-27",
+                    filePath: "A.md",
+                    start: makeCount(0),
+                    added: makeCount(10),
+                    deleted: makeCount(0),
+                    net: makeCount(10)
+                });
+
+                // 09-28 写作日
+                await repository.saveActivity({
+                    date: "2026-09-28",
+                    filePath: "B.md",
+                    start: makeCount(0),
+                    added: makeCount(20),
+                    deleted: makeCount(0),
+                    net: makeCount(20)
+                });
+
+                // 09-29 没有任何 Activity， DailyHistoryService 会自动补成 0，因此连续写作在这里中断
+
+                // 09-30 写作日
+                await repository.saveActivity({
+                    date: "2026-09-30",
+                    filePath: "C.md",
+                    start: makeCount(0),
+                    added: makeCount(5),
+                    deleted: makeCount(0),
+                    net: makeCount(5)
+                });
+
+                const service =
+                    new DailyHistoryService(
+                        repository
+                    );
+
+                const streak =
+                    await service.getWritingStreak(
+                        "2026-09-27",
+                        "2026-09-30"
+                    );
+
+                expect(streak)
+                    .toBe(1)
+            }
+        );
+
+        test(
+            "最后一天没有写作时，当前连续写作天数为 0",
+            async () => {
+                const repository =
+                    new MemoryStatsRepository();
+
+                // 09-27
+                await repository.saveActivity({
+                    date: "2026-09-27",
+                    filePath: "A.md",
+                    start: makeCount(0),
+                    added: makeCount(10),
+                    deleted: makeCount(0),
+                    net: makeCount(10)
+                });
+
+                // 09-28
+                await repository.saveActivity({
+                    date: "2026-09-28",
+                    filePath: "B.md",
+                    start: makeCount(0),
+                    added: makeCount(20),
+                    deleted: makeCount(0),
+                    net: makeCount(20)
+                });
+
+                /*
+                * 09-29 没有 activity。
+                *
+                * getHistory() 会自动补成：
+                *
+                * added: 0
+                * deleted: 0
+                * net: 0
+                * activeFiles: 0
+                */
+
+                const service =
+                    new DailyHistoryService(
+                        repository
+                    );
+
+                const streak =
+                    await service.getWritingStreak(
+                        "2026-09-27",
+                        "2026-09-29"
+                    );
+
+                expect(streak)
+                    .toBe(0);
+            }
+        );
+
+        test(
+            "连续多天写作时正确累计连续写作天数",
+            async () => {
+                const repository =
+                    new MemoryStatsRepository();
+
+                await repository.saveActivity({
+                    date: "2026-09-27",
+                    filePath: "A.md",
+                    start: makeCount(0),
+                    added: makeCount(10),
+                    deleted: makeCount(0),
+                    net: makeCount(10)
+                });
+
+                await repository.saveActivity({
+                    date: "2026-09-28",
+                    filePath: "B.md",
+                    start: makeCount(0),
+                    added: makeCount(20),
+                    deleted: makeCount(0),
+                    net: makeCount(20)
+                });
+
+                await repository.saveActivity({
+                    date: "2026-09-29",
+                    filePath: "C.md",
+                    start: makeCount(0),
+                    added: makeCount(30),
+                    deleted: makeCount(0),
+                    net: makeCount(30)
+                });
+
+                const service =
+                    new DailyHistoryService(
+                        repository
+                    );
+
+                const streak =
+                    await service.getWritingStreak(
+                        "2026-09-27",
+                        "2026-09-29"
+                    );
+
+                expect(streak)
+                    .toBe(3);
+            }
+        );
     }
 );
