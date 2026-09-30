@@ -230,4 +230,21 @@ export class DailyHistoryService {
             `${year}-${month}-${day}`
         );
     }
+
+    async getActiveDays(
+        startDate: string,
+        endDate: string
+    ): Promise<number> {
+        const history =
+            await this.getHistory(
+                startDate,
+                endDate
+            );
+
+        return history.filter(
+            entry => 
+                entry.added > 0 ||
+                entry.deleted > 0
+        ).length;
+    }
 }

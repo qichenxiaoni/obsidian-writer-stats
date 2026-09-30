@@ -154,5 +154,45 @@ describe(
                     ]);
             }
         );
+
+        test (
+            "正确统计日期范围内的活跃天数",
+            async () => {
+                const repository =
+                    new MemoryStatsRepository();
+
+                await repository.saveActivity({
+                    date: "2026-09-28",
+                    filePath: "A.md",
+                    start: makeCount(0),
+                    added: makeCount(10),
+                    deleted: makeCount(0),
+                    net: makeCount(10)
+                });
+
+                await repository.saveActivity({
+                    date: "2026-09-30",
+                    filePath: "B.md",
+                    start: makeCount(20),
+                    added: makeCount(0),
+                    deleted: makeCount(5),
+                    net: makeCount(-5)
+                });
+
+                const service =
+                    new DailyHistoryService(
+                        repository
+                    );
+
+                const activeDays =
+                    await service.getActiveDays(
+                        "2026-09-28",
+                        "2026-09-30"
+                    );
+
+                expect(activeDays)
+                    .toBe(2)
+            }
+        );
     }
 );
