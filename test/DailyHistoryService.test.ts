@@ -91,5 +91,68 @@ describe(
                     ]);
             }
         );
+
+        test(
+            "没有写作活动的日期会补充为零",
+            async () => {
+                const repository =
+                    new MemoryStatsRepository();
+
+                await repository.saveActivity({
+                    date: "2026-09-28",
+                    filePath: "A.md",
+                    start: makeCount(0),
+                    added: makeCount(10),
+                    deleted: makeCount(0),
+                    net: makeCount(10)
+                });
+
+                await repository.saveActivity({
+                    date: "2026-09-30",
+                    filePath: "B.md",
+                    start: makeCount(0),
+                    added: makeCount(20),
+                    deleted: makeCount(5),
+                    net: makeCount(15)
+                });
+
+                const service =
+                    new DailyHistoryService(
+                        repository
+                    );
+
+                const result =
+                    await service.getHistory(
+                        "2026-09-28",
+                        "2026-09-30"
+                    );
+
+                expect(result)
+                    .toEqual([
+                        {
+                            date: "2026-09-28",
+                            added: 10,
+                            deleted: 0,
+                            net: 10,
+                            activeFiles: 1
+                        },
+
+                        {
+                            date: "2026-09-29",
+                            added: 0,
+                            deleted: 0,
+                            net: 0,
+                            activeFiles: 0
+                        },
+                        {
+                            date: "2026-09-30",
+                            added: 20,
+                            deleted: 5,
+                            net: 15,
+                            activeFiles: 1
+                        }
+                    ]);
+            }
+        );
     }
 );

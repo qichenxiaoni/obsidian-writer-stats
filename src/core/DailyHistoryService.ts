@@ -25,6 +25,11 @@ export class DailyHistoryService {
                     endDate
                 );
 
+        /*
+         * 第一步：
+         * 先把实际存在的 activity
+         * 按日期聚合。
+         */
         const entries =
             new Map<
                 string,
@@ -73,14 +78,40 @@ export class DailyHistoryService {
         }
 
 
-        return Array.from(
-            entries.entries()
-        )
-            .map(
-                ([
-                    date,
-                    entry
-                ]): DailyHistoryEntry => ({
+        /*
+         * 第二步：
+         * 不再只遍历 entries。
+         *
+         * 而是遍历 startDate ~ endDate
+         * 之间的每一天。
+         */
+        const dates =
+            this.getDatesBetween(
+                startDate,
+                endDate
+            );
+
+
+        return dates.map(
+            date => {
+                const entry =
+                    entries.get(date);
+
+                /*
+                 * 当天没有任何 activity：
+                 * 主动返回一条全 0 数据。
+                 */
+                if (!entry) {
+                    return {
+                        date,
+                        added: 0,
+                        deleted: 0,
+                        net: 0,
+                        activeFiles: 0
+                    };
+                }
+
+                return {
                     date,
 
                     added:
@@ -94,13 +125,109 @@ export class DailyHistoryService {
 
                     activeFiles:
                         entry.files.size
-                })
-            )
-            .sort(
-                (a, b) =>
-                    a.date.localeCompare(
-                        b.date
-                    )
+                };
+            }
+        );
+    }
+
+
+    /**
+     * 返回包含 startDate 和 endDate
+     * 在内的全部日期。
+     *
+     * 例如：
+     *
+     * 2026-09-28
+     * 2026-09-29
+     * 2026-09-30
+     */
+    private getDatesBetween(
+        startDate: string,
+        endDate: string
+    ): string[] {
+        const dates: string[] = [];
+
+        const current =
+            this.parseDate(
+                startDate
             );
+
+        const end =
+            this.parseDate(
+                endDate
+            );
+
+
+        while (
+            current.getTime() <=
+            end.getTime()
+        ) {
+            dates.push(
+                this.formatDate(
+                    current
+                )
+            );
+
+            /*
+             * 使用 UTC 增加一天，
+             * 避免夏令时导致
+             * 23 / 25 小时日期问题。
+             */
+            current.setUTCDate(
+                current.getUTCDate() + 1
+            );
+        }
+
+
+        return dates;
+    }
+
+
+    private parseDate(
+        date: string
+    ): Date {
+        const [
+            year,
+            month,
+            day
+        ] = date
+            .split("-")
+            .map(Number);
+
+        return new Date(
+            Date.UTC(
+                year,
+                month - 1,
+                day
+            )
+        );
+    }
+
+
+    private formatDate(
+        date: Date
+    ): string {
+        const year =
+            date.getUTCFullYear();
+
+        const month =
+            String(
+                date.getUTCMonth() + 1
+            ).padStart(
+                2,
+                "0"
+            );
+
+        const day =
+            String(
+                date.getUTCDate()
+            ).padStart(
+                2,
+                "0"
+            );
+
+        return (
+            `${year}-${month}-${day}`
+        );
     }
 }
