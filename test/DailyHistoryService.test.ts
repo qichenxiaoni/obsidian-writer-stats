@@ -32,7 +32,7 @@ describe(
             async () => {
                 const repository =
                     new MemoryStatsRepository();
-                   
+
                 await repository.saveActivity({
                     date: "2026-09-28",
                     filePath: "A.md",
@@ -82,7 +82,7 @@ describe(
                         },
 
                         {
-                            date:"2026-09-29",
+                            date: "2026-09-29",
                             added: 15,
                             deleted: 0,
                             net: 15,
@@ -155,7 +155,7 @@ describe(
             }
         );
 
-        test (
+        test(
             "正确统计日期范围内的活跃天数",
             async () => {
                 const repository =
@@ -195,7 +195,7 @@ describe(
             }
         );
 
-        test (
+        test(
             "写作中断后重新开始时，只统计当前连续写作天数",
             async () => {
                 const repository =
@@ -354,7 +354,7 @@ describe(
         test(
             "正确生成日期范围的历史摘要",
             async () => {
-                const repository = 
+                const repository =
                     new MemoryStatsRepository();
 
                 // 09-27
@@ -379,7 +379,7 @@ describe(
 
                 // 09-29 无 activity, getHistory() 应该补成 0
 
-                const service = 
+                const service =
                     new DailyHistoryService(
                         repository
                     );
@@ -404,7 +404,7 @@ describe(
 
                 expect(summary.added)
                     .toBe(30);
-                    
+
                 expect(summary.deleted)
                     .toBe(7);
 
@@ -414,6 +414,58 @@ describe(
                 expect(summary.days)
                     .toHaveLength(3);
             }
-        )
+        );
+
+        test(
+            "可以生成最近 7 天的历史摘要",
+            async () => {
+                const repository =
+                    new MemoryStatsRepository();
+
+                await repository.saveActivity({
+                    date: "2026-09-24",
+                    filePath: "A.md",
+                    start: makeCount(0),
+                    added: makeCount(10),
+                    deleted: makeCount(0),
+                    net: makeCount(10)
+                });
+
+                await repository.saveActivity({
+                    date: "2026-09-30",
+                    filePath: "B.md",
+                    start: makeCount(0),
+                    added: makeCount(20),
+                    deleted: makeCount(0),
+                    net: makeCount(20)
+                });
+
+                const service =
+                    new DailyHistoryService(
+                        repository
+                    );
+
+                const summary =
+                    await service.getRecentSummary(
+                        "2026-09-30",
+                        7
+                    );
+
+                expect(summary.startDate)
+                    .toBe("2026-09-24");
+
+                expect(summary.endDate)
+                    .toBe("2026-09-30");
+
+                expect(summary.totalDays)
+                    .toBe(7);
+
+                expect(summary.added)
+                    .toBe(30);
+
+                expect(summary.days)
+                    .toHaveLength(7);
+            }
+        );
     }
 );

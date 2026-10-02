@@ -4,12 +4,15 @@ import type { DailyFileActivity } from "../domain/DailyFileActivity";
 import { getLocalDateKey } from "../utils/DateService";
 import type { DailyOverviewService } from "../core/DailyOverviewService";
 import type { GoalProgress } from "../domain/GoalProgress";
+import type { DailyHistoryService } from "../core/DailyHistoryService";
+import type { DailyHistorySummary } from "../domain/DailyHistorySummary";
 
 export class StatisticsModal extends Modal {
     constructor(
         app: App,
         private readonly statsService: DailyStatsService,
         private readonly overviewService: DailyOverviewService,
+        private readonly historyService: DailyHistoryService,
         private readonly date: string = getLocalDateKey()
     ) {
         super(app);
@@ -131,6 +134,10 @@ export class StatisticsModal extends Modal {
         this.createGoalSection(
             contentEl,
             goal
+        );
+
+        await this.renderHistorySection(
+            contentEl
         );
 
 
@@ -257,7 +264,7 @@ export class StatisticsModal extends Modal {
             container.createDiv({
                 cls: "writer-stats-modal__file"
             });
-        
+
         if (isCurrentFile) {
             row.addClass(
                 "writer-stats-modal__file--current"
@@ -268,24 +275,24 @@ export class StatisticsModal extends Modal {
             row.createDiv({
                 cls: "writer-stats-modal__file-main"
             });
-        
-        const file = 
+
+        const file =
             this.app.vault
                 .getAbstractFileByPath(
                     activity.filePath
                 );
-        
+
         if (file instanceof TFile) {
-            const name = 
+            const name =
                 main.createEl(
                     "button",
                     {
-                        cls: 
+                        cls:
                             "writer-stats-modal__file-name writer-stats-modal__file-link",
                         text: activity.filePath
                     }
                 );
-            
+
             name.addEventListener(
                 "click",
                 () => {
@@ -293,20 +300,20 @@ export class StatisticsModal extends Modal {
                 }
             );
         } else {
-            const nameRow = 
+            const nameRow =
                 main.createDiv({
-                    cls: 
+                    cls:
                         "writer-stats-modal__file-name-row"
                 });
-            
+
             nameRow.createSpan({
-                cls: 
+                cls:
                     "writer-stats-modal__file-name",
                 text: activity.filePath
             });
 
             nameRow.createSpan({
-                cls: 
+                cls:
                     "writer-stats-modal__file-missing",
                 text: "已删除"
             });
@@ -392,7 +399,7 @@ export class StatisticsModal extends Modal {
         await this.app.workspace
             .getLeaf(false)
             .openFile(file)
-        
+
         this.close();
     }
 
@@ -402,11 +409,11 @@ export class StatisticsModal extends Modal {
     ): void {
         const section =
             container.createDiv({
-                cls: 
+                cls:
                     "writer-stats-modal__goal"
             });
 
-        const header = 
+        const header =
             section.createDiv({
                 cls:
                     "writer-stats-modal__goal-header"
@@ -415,7 +422,7 @@ export class StatisticsModal extends Modal {
         header.createSpan({
             cls:
                 "writer-stats-modal__goal-title",
-            text: 
+            text:
                 "今日目标"
         });
 
@@ -456,13 +463,13 @@ export class StatisticsModal extends Modal {
                 goal.percentage,
                 100
             );
-        
+
         bar.style.width =
             `${visualPercentage}%`;
 
         const footer =
             section.createDiv({
-                cls: 
+                cls:
                     "writer-stats-modal__goal-footer"
             });
 
@@ -471,5 +478,287 @@ export class StatisticsModal extends Modal {
                 ? `今日目标已完成 · ${goal.percentage}%`
                 : `还差 ${goal.remaining}`
         );
+    }
+
+    private async renderHistorySection(
+        container: HTMLElement
+    ): Promise<void> {
+        const section =
+            container.createDiv({
+                cls:
+                    "writer-stats-modal__history"
+            });
+
+        const header =
+            section.createDiv({
+                cls:
+                    "writer-stats-modal__history-header"
+            });
+
+        header.createEl(
+            "h3",
+            {
+                text: "历史摘要"
+            }
+        );
+
+        const rangeSelector =
+            header.createDiv({
+                cls:
+                    "writer-stats-modal__history-range"
+            });
+
+        const content =
+            section.createDiv({
+                cls:
+                    "writer-stats-modal__history-content"
+            });
+
+
+        const buttons =
+            new Map<
+                number,
+                HTMLButtonElement
+            >();
+
+
+        /*
+         * 统一负责按钮的视觉状态。
+         *
+         * 不把选中状态依赖在 :focus 上。
+         */
+        const setActiveRange =
+            (
+                activeDays: number
+            ): void => {
+                for (
+                    const [
+                        days,
+                        button
+                    ] of buttons
+                ) {
+                    const isActive =
+                        days === activeDays;
+
+                    button.classList.toggle(
+                        "is-active",
+                        isActive
+                    );
+
+                    button.setAttribute(
+                        "aria-pressed",
+                        String(isActive)
+                    );
+                }
+            };
+
+
+        const renderRange =
+            async (
+                days: number
+            ): Promise<void> => {
+                /*
+                 * 点击后立即更新按钮状态，
+                 * 不需要等数据查询完成。
+                 */
+                setActiveRange(
+                    days
+                );
+
+                content.empty();
+
+                content.createDiv({
+                    cls:
+                        "writer-stats-modal__history-loading",
+                    text:
+                        "正在统计…"
+                });
+
+                const summary =
+                    await this.historyService
+                        .getRecentSummary(
+                            this.date,
+                            days
+                        );
+
+                content.empty();
+
+                this.renderHistorySummary(
+                    content,
+                    summary
+                );
+            };
+
+
+        /*
+         * 7 天按钮
+         */
+        const sevenDaysButton =
+            rangeSelector.createEl(
+                "button",
+                {
+                    cls:
+                        "writer-stats-modal__history-range-button",
+                    text:
+                        "7 天"
+                }
+            );
+
+        sevenDaysButton.setAttribute(
+            "type",
+            "button"
+        );
+
+        buttons.set(
+            7,
+            sevenDaysButton
+        );
+
+        sevenDaysButton.addEventListener(
+            "click",
+            () => {
+                void renderRange(
+                    7
+                );
+            }
+        );
+
+
+        /*
+         * 30 天按钮
+         */
+        const thirtyDaysButton =
+            rangeSelector.createEl(
+                "button",
+                {
+                    cls:
+                        "writer-stats-modal__history-range-button",
+                    text:
+                        "30 天"
+                }
+            );
+
+        thirtyDaysButton.setAttribute(
+            "type",
+            "button"
+        );
+
+        buttons.set(
+            30,
+            thirtyDaysButton
+        );
+
+        thirtyDaysButton.addEventListener(
+            "click",
+            () => {
+                void renderRange(
+                    30
+                );
+            }
+        );
+
+
+        /*
+         * 默认状态必须明确设为 7 天。
+         *
+         * 这里同时完成：
+         *
+         * 1. 7 天按钮显示选中状态
+         * 2. aria-pressed = true
+         * 3. 查询最近 7 天数据
+         */
+        await renderRange(
+            7
+        );
+    }
+
+    private renderHistorySummary(
+        container: HTMLElement,
+        summary: DailyHistorySummary
+    ): void {
+        container.createDiv({
+            cls:
+                "writer-stats-modal__history-dates",
+
+            text:
+                `${summary.startDate} ~ ${summary.endDate}`
+        });
+
+        const grid =
+            container.createDiv({
+                cls:
+                    "writer-stats-modal__history-grid"
+            });
+
+        this.createHistoryMetric(
+            grid,
+            "新增",
+            this.formatHistorySigned(
+                summary.added
+            )
+        );
+
+        this.createHistoryMetric(
+            grid,
+            "删除",
+            String(
+                summary.deleted
+            )
+        );
+
+        this.createHistoryMetric(
+            grid,
+            "净增长",
+            this.formatHistorySigned(
+                summary.net
+            )
+        );
+
+        this.createHistoryMetric(
+            grid,
+            "活跃天数",
+            `${summary.activeDays} / ${summary.totalDays}`
+        );
+
+        this.createHistoryMetric(
+            grid,
+            "连续写作",
+            `${summary.writingStreak} 天`
+        );
+    }
+
+    private createHistoryMetric(
+        container: HTMLElement,
+        label: string,
+        value: string
+    ): void {
+        const metric =
+            container.createDiv({
+                cls:
+                    "writer-stats-modal__history-metric"
+            });
+
+        metric.createDiv({
+            cls:
+                "writer-stats-modal__history-metric-label",
+            text: label
+        });
+
+        metric.createDiv({
+            cls:
+                "writer-stats-modal__histroy-metric-value",
+
+            text: value
+        });
+    }
+
+    private formatHistorySigned(
+        value: number
+    ): string {
+        if (value > 0) {
+            return `+${value}`;
+        }
+
+        return String(value);
     }
 }

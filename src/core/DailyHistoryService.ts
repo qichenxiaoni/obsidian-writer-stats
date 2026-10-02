@@ -325,6 +325,31 @@ export class DailyHistoryService {
         };
     }
 
+    async getRecentSummary(
+        endDate: string,
+        days: number
+    ): Promise<DailyHistorySummary> {
+        const start = 
+            this.parseDate(
+                endDate
+            );
+
+        start.setUTCDate(
+            start.getUTCDate() -
+                (days - 1)
+        );
+
+        const startDate = 
+            this.formatDate(
+                start
+            );
+
+        return this.getSummary(
+            startDate,
+            endDate
+        );
+    }
+
     private countActiveDays(
         history: DailyHistoryEntry[]
     ): number {

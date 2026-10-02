@@ -50,8 +50,7 @@
 
   padding: 14px 12px;
 
-  border: 1px solid
-    var(--background-modifier-border);
+  border: 1px solid var(--background-modifier-border);
 
   border-radius: 10px;
 
@@ -267,8 +266,7 @@
 
   padding: 14px 16px;
 
-  border: 1px solid
-    var(--background-secondary);
+  border: 1px solid var(--background-secondary);
 }
 
 .writer-stats-modal__goal-header {
@@ -336,4 +334,190 @@
   color: var(--text-muted);
 
   font-size: var(--font-ui-smaller);
+}
+
+/* Writer Stats - History Summary */
+
+.writer-stats-modal__history {
+  margin: 24px;
+  margin-bottom: 24px;
+}
+
+.writer-stats-modal__history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 12px;
+}
+
+.writer-stats-modal__history-header h3 {
+  margin: 0;
+  color: var(--text-accent);
+}
+
+/* Range selector */
+
+.writer-stats-modal__history-range {
+  display: flex;
+
+  gap: 4px;
+
+  padding: 3px;
+
+  border-radius: 8px;
+
+  background: var(--background-secondary);
+}
+
+/* History range selector */
+
+.writer-stats-modal__history-range {
+  display: flex;
+  gap: 4px;
+
+  padding: 3px;
+
+  border-radius: 8px;
+
+  background:
+    var(--background-secondary);
+}
+
+
+.writer-stats-modal__history-range .writer-stats-modal__history-range-button {
+  min-width: 48px;
+
+  padding: 4px 10px;
+
+  border:
+    1px solid transparent;
+
+  border-radius: 6px;
+
+  background:
+    transparent;
+
+  box-shadow:
+    none;
+
+  color:
+    var(--text-muted);
+
+  font-size:
+    var(--font-ui-smaller);
+
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+
+.writer-stats-modal__history-range .writer-stats-modal__history-range-button:hover {
+  background:
+    var(--background-modifier-hover);
+
+  color:
+    var(--text-normal);
+}
+
+
+/*
+ * 真正的选中状态。
+ *
+ * 提高选择器优先级，避免被
+ * Obsidian 默认 button 样式覆盖。
+ */
+.writer-stats-modal__history-range .writer-stats-modal__history-range-button.is-active {
+  border-color:
+    var(--interactive-accent);
+
+  background:
+    var(--interactive-accent);
+
+  color:
+    var(--text-on-accent);
+
+  box-shadow:
+    none;
+}
+
+
+/*
+ * focus 只表示键盘/鼠标焦点，
+ * 不代表当前选择。
+ */
+.writer-stats-modal__history-range .writer-stats-modal__history-range-button:focus {
+  box-shadow:
+    none;
+}
+
+
+.writer-stats-modal__history-range .writer-stats-modal__history-range-button:focus-visible {
+  outline:
+    2px solid var(--interactive-accent);
+
+  outline-offset:
+    2px;
+}
+
+/* Date range */
+
+.writer-stats-modal__history-dates {
+  margin-bottom: 12px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+/* Metrics */
+
+.writer-stats-modal__history-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+  background: var(--background-secondary);
+}
+
+.writer-stats-modal__history-metric {
+  min-width: 0;
+}
+
+.writer-stats-modal__history-metric-label {
+  margin-bottom: 4px;
+
+  color: var(--text-muted);
+
+  font-size: var(--font-ui-smaller);
+}
+
+.writer-stats-modal__history-metric-value {
+  color: var(--text-normal);
+  font-size: 1.25em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Loading */
+
+.writer-stats-modal__history-loading {
+  padding: 16px 0;
+  color: var(--text-muted);
+}
+
+/* Narrow modal */
+
+@media (max-width: 700px) {
+  .writer-stats-modal__history-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

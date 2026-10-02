@@ -13,6 +13,7 @@ import { PluginSettingsService } from "./core/PluginSettingsService";
 import { WriterStatsSettingTab } from "./ui/WriterStatsSettingTab";
 import { GoalService } from "./core/GoalService";
 import { DailyOverviewService } from "./core/DailyOverviewService";
+import { DailyHistoryService } from "./core/DailyHistoryService";
 
 export default class WordCountPlugin extends Plugin {
     private activityTracker!: ActivityTracker;
@@ -24,6 +25,7 @@ export default class WordCountPlugin extends Plugin {
     private settingsService!: PluginSettingsService;
     private goalService!: GoalService;
     private dailyOverviewService!: DailyOverviewService;
+    private dailyHistoryService!: DailyHistoryService;
 
     async onload(): Promise<void> {
         console.log("Word Count Plugin v1 loaded");
@@ -45,11 +47,13 @@ export default class WordCountPlugin extends Plugin {
                 this.settingsService,
                 this.goalService
             );
+        this.dailyHistoryService = new DailyHistoryService(this.repository);
         this.statusBar = new StatusBarController(this,this.dailyOverviewService, () => {
             new StatisticsModal(
                 this.app,
                 this.dailyStatsService,
-                this.dailyOverviewService
+                this.dailyOverviewService,
+                this.dailyHistoryService
             ).open();
         });
         this.statusBar.start();
@@ -103,7 +107,8 @@ export default class WordCountPlugin extends Plugin {
                 new StatisticsModal(
                     this.app,
                     this.dailyStatsService,
-                    this.dailyOverviewService
+                    this.dailyOverviewService,
+                    this.dailyHistoryService
                 ).open();
             }
         });
