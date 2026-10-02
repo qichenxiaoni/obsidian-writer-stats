@@ -245,11 +245,9 @@ export class DailyHistoryService {
                 endDate
             );
 
-        return history.filter(
-            entry =>
-                entry.added > 0 ||
-                entry.deleted > 0
-        ).length;
+        return this.countActiveDays(
+            history
+        );
     }
 
     async getWritingStreak(
@@ -262,37 +260,9 @@ export class DailyHistoryService {
                 endDate
             );
 
-        let streak = 0;
-
-        /*
-        * getHistory() 已经保证：
-        *
-        * 1. 日期是连续的
-        * 2. 没有活动的日期会补成 0
-        * 3. 日期按照从早到晚排列
-        *
-        * 所以这里只需要从最后一天
-        * 向前检查即可。
-        */
-
-        for (
-            let index = history.length -1;
-            index >= 0;
-            index--
-        ) {
-            const entry =
-                history[index];
-
-            // added > 0
-
-            if (entry.added <= 0){
-                break;
-            }
-
-            streak++;
-        }
-
-        return streak;
+        return this.countWritingsStreak(
+            history
+        );
     }
 
     async getSummary(
@@ -327,27 +297,15 @@ export class DailyHistoryService {
             );
 
         const activeDays =
-            history.filter(
-                entry =>
-                    entry.added > 0 ||
-                    entry.deleted > 0
-            ).length;
+            this.countActiveDays(
+                history
+            );
 
-        let writingStreak = 0;
-
-        for (
-            let index = history.length - 1;
-            index >= 0;
-            index-- 
-        ) {
-            if (
-                history[index].added <= 0
-            ) {
-                break;
-            }
-
-            writingStreak++;
-        }
+        
+        const writingStreak =
+            this.countWritingsStreak(
+                history
+            );
 
         return{
             startDate,
@@ -365,5 +323,37 @@ export class DailyHistoryService {
 
             days: history
         };
+    }
+
+    private countActiveDays(
+        history: DailyHistoryEntry[]
+    ): number {
+        return history.filter(
+            entry =>
+                entry.added > 0 ||
+                entry.deleted > 0
+        ).length;
+    }
+
+    private countWritingsStreak(
+        history: DailyHistoryEntry[]
+    ): number {
+        let streak = 0;
+
+        for (
+            let index = history.length - 1;
+            index >= 0;
+            index--
+        ) {
+            if (
+                history[index].added <= 0
+            ) {
+                break;
+            }
+
+            streak++;
+        }
+
+        return streak;
     }
 }
