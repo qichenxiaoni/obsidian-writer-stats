@@ -350,5 +350,70 @@ describe(
                     .toBe(3);
             }
         );
+
+        test(
+            "正确生成日期范围的历史摘要",
+            async () => {
+                const repository = 
+                    new MemoryStatsRepository();
+
+                // 09-27
+                await repository.saveActivity({
+                    date: "2026-09-27",
+                    filePath: "A.md",
+                    start: makeCount(0),
+                    added: makeCount(10),
+                    deleted: makeCount(2),
+                    net: makeCount(8)
+                });
+
+                // 09-28
+                await repository.saveActivity({
+                    date: "2026-09-28",
+                    filePath: "B.md",
+                    start: makeCount(0),
+                    added: makeCount(20),
+                    deleted: makeCount(5),
+                    net: makeCount(15)
+                });
+
+                // 09-29 无 activity, getHistory() 应该补成 0
+
+                const service = 
+                    new DailyHistoryService(
+                        repository
+                    );
+
+                const summary =
+                    await service.getSummary(
+                        "2026-09-27",
+                        "2026-09-29"
+                    );
+
+                expect(summary.startDate)
+                    .toBe("2026-09-27");
+
+                expect(summary.endDate)
+                    .toBe("2026-09-29");
+
+                expect(summary.activeDays)
+                    .toBe(2);
+
+                expect(summary.writingStreak)
+                    .toBe(0);
+
+                expect(summary.added)
+                    .toBe(30);
+                    
+                expect(summary.deleted)
+                    .toBe(7);
+
+                expect(summary.net)
+                    .toBe(23);
+
+                expect(summary.days)
+                    .toHaveLength(3);
+            }
+        )
     }
 );

@@ -6,6 +6,10 @@ import type {
     StatsRepository
 } from "../persistence/StatsRepository";
 
+import type {
+    DailyHistorySummary
+} from "../domain/DailyHistorySummary";
+
 
 export class DailyHistoryService {
     constructor(
@@ -289,5 +293,77 @@ export class DailyHistoryService {
         }
 
         return streak;
+    }
+
+    async getSummary(
+        startDate: string,
+        endDate: string
+    ): Promise<DailyHistorySummary> {
+        const history = 
+            await this.getHistory(
+                startDate,
+                endDate
+            );
+
+        const added =
+            history.reduce(
+                (total, entry) => 
+                    total + entry.added,
+                0
+            );
+
+        const deleted = 
+            history.reduce(
+                (total, entry) => 
+                    total + entry.deleted,
+                0
+            );
+        
+        const net =
+            history.reduce(
+                (total,entry) => 
+                    total + entry.net,
+                0
+            );
+
+        const activeDays =
+            history.filter(
+                entry =>
+                    entry.added > 0 ||
+                    entry.deleted > 0
+            ).length;
+
+        let writingStreak = 0;
+
+        for (
+            let index = history.length - 1;
+            index >= 0;
+            index-- 
+        ) {
+            if (
+                history[index].added <= 0
+            ) {
+                break;
+            }
+
+            writingStreak++;
+        }
+
+        return{
+            startDate,
+            endDate,
+
+            totalDays: history.length,
+
+            activeDays,
+
+            writingStreak,
+
+            added,
+            deleted,
+            net,
+
+            days: history
+        };
     }
 }
