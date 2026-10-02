@@ -725,6 +725,12 @@ export class StatisticsModal extends Modal {
             "连续写作",
             `${summary.writingStreak} 天`
         );
+
+        this.createHistoryMetric(
+            grid,
+            "最长连续",
+            `${summary.longesWritingStreak} 天`
+        );
     }
 
     private createHistoryMetric(

@@ -307,6 +307,11 @@ export class DailyHistoryService {
                 history
             );
 
+        const longesWritingStreak =
+            this.countLongerstWritingStreak(
+                history
+            );
+
         return{
             startDate,
             endDate,
@@ -316,6 +321,7 @@ export class DailyHistoryService {
             activeDays,
 
             writingStreak,
+            longesWritingStreak,
 
             added,
             deleted,
@@ -380,5 +386,28 @@ export class DailyHistoryService {
         }
 
         return streak;
+    }
+
+    private countLongerstWritingStreak(
+        history: DailyHistoryEntry[]
+    ): number {
+        let longest = 0;
+        let current = 0;
+
+        for (const entry of history) {
+            if (entry.added > 0) {
+                current++;
+
+                if (current > longest) {
+                    longest = current;
+                }
+
+                continue;
+            }
+
+            current = 0;
+        }
+
+        return longest;
     }
 }

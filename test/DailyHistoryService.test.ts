@@ -467,5 +467,135 @@ describe(
                     .toHaveLength(7);
             }
         );
+
+        test(
+            "正确统计日期范围内的最长连续写作天数",
+            async () => {
+                const repository =
+                    new MemoryStatsRepository();
+
+                // 连续两天
+                await repository.saveActivity({
+                    date: "2026-09-24",
+                    filePath: "A.md",
+                    start: makeCount(0),
+                    added: makeCount(10),
+                    deleted: makeCount(0),
+                    net: makeCount(10)
+                });
+
+                await repository.saveActivity({
+                    date: "2026-09-25",
+                    filePath: "B.md",
+                    start: makeCount(0),
+                    added: makeCount(20),
+                    deleted: makeCount(0),
+                    net: makeCount(20)
+                });
+
+                // 中断一天
+
+                // 连续三天
+                await repository.saveActivity({
+                    date: "2026-09-27",
+                    filePath: "C.md",
+                    start: makeCount(0),
+                    added: makeCount(5),
+                    deleted: makeCount(0),
+                    net: makeCount(5)
+                });
+
+                await repository.saveActivity({
+                    date: "2026-09-28",
+                    filePath: "D.md",
+                    start: makeCount(0),
+                    added: makeCount(15),
+                    deleted: makeCount(0),
+                    net: makeCount(15)
+                });
+
+                await repository.saveActivity({
+                    date: "2026-09-29",
+                    filePath: "E.md",
+                    start: makeCount(0),
+                    added: makeCount(25),
+                    deleted: makeCount(0),
+                    net: makeCount(25)
+                });
+
+                const service = 
+                    new DailyHistoryService(
+                        repository
+                    );
+
+                const summary =
+                    await service.getSummary(
+                        "2026-09-24",
+                        "2026-09-30"
+                    );
+
+                expect(
+                    summary.writingStreak
+                ).toBe(0);
+
+                expect(
+                    summary.longesWritingStreak
+                ).toBe(3);
+            }
+        );
+
+        test(
+            "只有删除操作的日期不会延续最长连续写作",
+            async () => {
+                const repository = 
+                    new MemoryStatsRepository();
+
+                await repository.saveActivity({
+                    date: "2026-09-27",
+                    filePath: "A.md",
+                    start: makeCount(0),
+                    added: makeCount(10),
+                    deleted: makeCount(0),
+                    net: makeCount(10)
+                });
+
+                await repository.saveActivity({
+                    date: "2026-09-28",
+                    filePath: "B.md",
+                    start: makeCount(0),
+                    added: makeCount(0),
+                    deleted: makeCount(5),
+                    net: makeCount(-5)
+                });
+
+                await repository.saveActivity({
+                    date: "2026-09-29",
+                    filePath: "C.md",
+                    start: makeCount(0),
+                    added: makeCount(20),
+                    deleted: makeCount(0),
+                    net: makeCount(20)
+                });
+
+                const service = 
+                    new DailyHistoryService(
+                        repository
+                    );
+
+                const summary =
+                    await service.getSummary(
+                        "2026-09-27",
+                        "2026-09-29"
+                    );
+
+                expect(
+                    summary.activeDays
+                ).toBe(3);
+
+                expect(
+                    summary.longesWritingStreak
+                ).toBe(1);
+            }
+        );
     }
 );
