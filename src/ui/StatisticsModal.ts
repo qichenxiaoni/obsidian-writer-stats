@@ -732,6 +732,11 @@ export class StatisticsModal extends Modal {
             `${summary.longesWritingStreak} 天`
         );
 
+        this.renderHistoryTrend(
+            container,
+            summary
+        );
+
         const bestDay =
             container.createDiv({
                 cls:
@@ -755,7 +760,7 @@ export class StatisticsModal extends Modal {
                 text:
                     `${summary.bestWritingDay.date} · +${summary.bestWritingDay.added}`
             });
-        }else {
+        } else {
             bestDay.createDiv({
                 cls:
                     "writer-stats-modal__best-day-value is-empty",
@@ -799,5 +804,238 @@ export class StatisticsModal extends Modal {
         }
 
         return String(value);
+    }
+
+    private renderHistoryTrend(
+        container: HTMLElement,
+        summary: DailyHistorySummary
+    ): void {
+        const section =
+            container.createDiv({
+                cls:
+                    "writer-stats-modal__trend"
+            });
+
+        section.createDiv({
+            cls:
+                "writer-stats-modal__trend-title",
+            text:
+                "每日新增趋势"
+        });
+
+
+        const maxAdded =
+            Math.max(
+                0,
+                ...summary.days.map(
+                    day => day.added
+                )
+            );
+
+
+        /*
+         * =========================
+         * Plot
+         * =========================
+         */
+
+        const plot =
+            section.createDiv({
+                cls:
+                    "writer-stats-modal__trend-plot"
+            });
+
+        plot.style.setProperty(
+            "--writer-stats-trend-columns",
+            String(
+                summary.days.length
+            )
+        );
+
+
+        for (const day of summary.days) {
+            const item =
+                plot.createDiv({
+                    cls:
+                        "writer-stats-modal__trend-item"
+                });
+
+            const bar =
+                item.createDiv({
+                    cls:
+                        "writer-stats-modal__trend-bar"
+                });
+
+
+            const height =
+                this.getTrendBarHeight(
+                    day.added,
+                    maxAdded,
+                    summary.days.length
+                );
+
+            bar.style.height =
+                `${height}%`;
+
+
+            if (day.added <= 0) {
+                bar.classList.add(
+                    "is-empty"
+                );
+            }
+
+
+            /*
+             * 最佳写作日额外标记。
+             */
+            if (
+                summary.bestWritingDay?.date ===
+                day.date
+            ) {
+                bar.classList.add(
+                    "is-best"
+                );
+            }
+
+
+            item.setAttribute(
+                "title",
+                [
+                    day.date,
+                    `新增：${this.formatHistorySigned(day.added)}`,
+                    `删除：${day.deleted}`,
+                    `净增长：${this.formatHistorySigned(day.net)}`
+                ].join("\n")
+            );
+        }
+
+
+        /*
+         * =========================
+         * X Axis
+         * =========================
+         *
+         * 日期标签单独绘制。
+         * 不再和柱子共用 item。
+         */
+
+        const axis =
+            section.createDiv({
+                cls:
+                    "writer-stats-modal__trend-axis"
+            });
+
+        axis.style.setProperty(
+            "--writer-stats-trend-columns",
+            String(
+                summary.days.length
+            )
+        );
+
+
+        for (
+            let index = 0;
+            index < summary.days.length;
+            index++
+        ) {
+            const day =
+                summary.days[index];
+
+            const label =
+                axis.createDiv({
+                    cls:
+                        "writer-stats-modal__trend-axis-label"
+                });
+
+
+            if (
+                this.shouldShowTrendLabel(
+                    index,
+                    summary.days.length
+                )
+            ) {
+                label.setText(
+                    this.formatTrendDate(
+                        day.date
+                    )
+                );
+            }
+
+
+            if (index === 0) {
+                label.classList.add(
+                    "is-first"
+                );
+            }
+
+            if (
+                index ===
+                summary.days.length - 1
+            ) {
+                label.classList.add(
+                    "is-last"
+                );
+            }
+        }
+    }
+
+    private getTrendBarHeight(
+        value: number,
+        maxValue: number,
+        totalDays: number
+    ): number {
+        if (
+            value <= 0 ||
+            maxValue <= 0
+        ) {
+            return 0;
+        }
+
+        const ratio =
+            value / maxValue;
+
+        if (totalDays <= 7) {
+            return Math.max(
+                ratio * 100,
+                8
+            );
+        }
+
+        return Math.max(
+            Math.sqrt(ratio) * 100,
+            5
+        );
+    }
+
+    private shouldShowTrendLabel(
+        index: number,
+        total: number
+    ): boolean {
+        // 7day：全部显示
+        if (total <= 7) {
+            return true;
+        }
+
+        // 30day:显示第一天、每五天、最后一天
+        return (
+            index === 0 ||
+            index === total - 1 ||
+            index % 5 === 0
+        );
+    }
+
+    private formatTrendDate(
+        date: string
+    ): string {
+        const parts =
+            date.split("-");
+
+        if (parts.length !== 3) {
+            return date;
+        }
+
+        return (
+            `${parts[1]}/${parts[2]}`
+        );
     }
 }

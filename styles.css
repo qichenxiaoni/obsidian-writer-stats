@@ -536,7 +536,7 @@
   padding: 10px 12px;
 
   border-radius: 8px;
-  
+
   background: var(--background-secondary-alt);
 }
 
@@ -559,4 +559,187 @@
   color: var(--text-faint);
 
   font-weight: 400;
+}
+
+/* ========================================
+   Writer Stats - Daily Trend
+   ======================================== */
+
+.writer-stats-modal__trend {
+  margin-top: 14px;
+}
+
+
+.writer-stats-modal__trend-title {
+  margin-bottom: 8px;
+
+  color:
+    var(--text-muted);
+
+  font-size:
+    var(--font-ui-smaller);
+
+  font-weight: 600;
+}
+
+
+/* ==============================
+   Plot
+   ============================== */
+
+.writer-stats-modal__trend-plot {
+  display: grid;
+
+  grid-template-columns:
+    repeat(var(--writer-stats-trend-columns),
+      minmax(0, 1fr));
+
+  align-items: end;
+
+  gap: 4px;
+
+  height: 92px;
+
+  padding:
+    10px 10px 4px;
+
+  border:
+    1px solid var(--background-modifier-border);
+
+  border-bottom: 0;
+
+  border-radius:
+    10px 10px 0 0;
+
+  background:
+    var(--background-secondary);
+}
+
+
+.writer-stats-modal__trend-item {
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: center;
+
+  min-width: 0;
+  height: 100%;
+
+  cursor: default;
+}
+
+
+.writer-stats-modal__trend-bar {
+  width: 68%;
+  height: 0;
+
+  min-width: 2px;
+
+  max-width: 18px;
+
+  border-radius:
+    4px 4px 2px 2px;
+
+  background:
+    var(--interactive-accent);
+
+  opacity: 0.72;
+
+  transform-origin:
+    bottom center;
+
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+
+.writer-stats-modal__trend-item:hover .writer-stats-modal__trend-bar {
+  opacity: 1;
+
+  transform:
+    scaleX(1.12);
+}
+
+
+.writer-stats-modal__trend-bar.is-empty {
+  height: 2px !important;
+
+  background:
+    var(--background-modifier-border);
+
+  opacity: 0.7;
+}
+
+
+/*
+ * 最佳写作日。
+ *
+ * 不改变主题颜色，
+ * 只增强当前 accent 的存在感。
+ */
+.writer-stats-modal__trend-bar.is-best {
+  opacity: 1;
+
+  box-shadow:
+    0 0 0 1px var(--interactive-accent);
+}
+
+
+/* ==============================
+   X Axis
+   ============================== */
+
+.writer-stats-modal__trend-axis {
+  display: grid;
+
+  grid-template-columns:
+    repeat(var(--writer-stats-trend-columns),
+      minmax(0, 1fr));
+
+  gap: 4px;
+
+  min-height: 24px;
+
+  padding:
+    3px 10px 5px;
+
+  border:
+    1px solid var(--background-modifier-border);
+
+  border-top: 0;
+
+  border-radius:
+    0 0 10px 10px;
+
+  background:
+    var(--background-secondary);
+}
+
+
+.writer-stats-modal__trend-axis-label {
+  min-width: 0;
+
+  color:
+    var(--text-faint);
+
+  font-size: 9px;
+
+  line-height: 1.2;
+
+  text-align: center;
+
+  white-space: nowrap;
+
+  overflow: visible;
+}
+
+
+.writer-stats-modal__trend-axis-label.is-first {
+  text-align: left;
+}
+
+
+.writer-stats-modal__trend-axis-label.is-last {
+  text-align: right;
 }
