@@ -10,6 +10,9 @@ import type {
     DailyHistorySummary
 } from "../domain/DailyHistorySummary";
 
+import type {
+    BestWritingDay
+} from "../domain/BestWritingDay";
 
 export class DailyHistoryService {
     constructor(
@@ -312,6 +315,11 @@ export class DailyHistoryService {
                 history
             );
 
+        const bestWritingDay = 
+            this.findBestWritingDay(
+                history
+            );
+
         return{
             startDate,
             endDate,
@@ -322,6 +330,8 @@ export class DailyHistoryService {
 
             writingStreak,
             longesWritingStreak,
+
+            bestWritingDay,
 
             added,
             deleted,
@@ -409,5 +419,53 @@ export class DailyHistoryService {
         }
 
         return longest;
+    }
+
+    private findBestWritingDay(
+        history: DailyHistoryEntry[]
+    ): BestWritingDay | null {
+        let best:
+            BestWritingDay | null =
+                null;
+
+        for (const entry of history){
+            if (entry.added <= 0) {
+                continue;
+            }
+
+            if (!best) {
+                best = {
+                    date: entry.date,
+                    added: entry.added
+                };
+
+                continue;
+            }
+
+            if (
+                entry.added > best.added
+            ){
+                best = {
+                    date: entry.date,
+                    added: entry.added
+                };
+
+                continue;
+            }
+
+            if (
+                entry.added ===
+                    best.added &&
+                entry.date >
+                    best.date
+            ){
+                best = {
+                    date: entry.date,
+                    added: entry.added
+                };
+            }
+        }
+
+        return best;
     }
 }

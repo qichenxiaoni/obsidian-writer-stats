@@ -731,6 +731,39 @@ export class StatisticsModal extends Modal {
             "最长连续",
             `${summary.longesWritingStreak} 天`
         );
+
+        const bestDay =
+            container.createDiv({
+                cls:
+                    "writer-stats-modal__best-day"
+            });
+
+        bestDay.createDiv({
+            cls:
+                "writer-stats-modal__best-day-label",
+            text:
+                "最佳写作日"
+        });
+
+        if (
+            summary.bestWritingDay
+        ) {
+            bestDay.createDiv({
+                cls:
+                    "writer-stats-modal__best-day-value",
+
+                text:
+                    `${summary.bestWritingDay.date} · +${summary.bestWritingDay.added}`
+            });
+        }else {
+            bestDay.createDiv({
+                cls:
+                    "writer-stats-modal__best-day-value is-empty",
+
+                text:
+                    "暂无写作记录"
+            });
+        }
     }
 
     private createHistoryMetric(

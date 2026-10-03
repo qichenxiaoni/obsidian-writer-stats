@@ -597,5 +597,134 @@ describe(
                 ).toBe(1);
             }
         );
+
+        test(
+            "正确找出新增字数最高的最佳写作日",
+            async () => {
+                const repository =
+                    new MemoryStatsRepository();
+
+                await repository.saveActivity({
+                    date: "2026-09-27",
+                    filePath: "A.md",
+                    start: makeCount(0),
+                    added: makeCount(10),
+                    deleted: makeCount(0),
+                    net: makeCount(10)
+                });
+
+                await repository.saveActivity({
+                    date: "2026-09-28",
+                    filePath: "B.md",
+                    start: makeCount(0),
+                    added: makeCount(50),
+                    deleted: makeCount(10),
+                    net: makeCount(40)
+                });
+
+                await repository.saveActivity({
+                    date: "2026-09-29",
+                    filePath: "C.md",
+                    start: makeCount(0),
+                    added: makeCount(20),
+                    deleted: makeCount(0),
+                    net: makeCount(20)
+                });
+
+                const service = 
+                    new DailyHistoryService(
+                        repository
+                    );
+
+                const summary = 
+                    await service.getSummary(
+                        "2026-09-27",
+                        "2026-09-29"
+                    );
+
+                expect(
+                    summary.bestWritingDay
+                ).toEqual({
+                    date: "2026-09-28",
+                    added: 50
+                });
+            }
+        );
+
+        test(
+            "最佳写作日期新增字数相同时选择较近日期",
+            async () => {
+                const repository =
+                    new MemoryStatsRepository();
+
+                await repository.saveActivity({
+                    date: "2026-09-27",
+                    filePath: "A.md",
+                    start: makeCount(0),
+                    added: makeCount(50),
+                    deleted: makeCount(0),
+                    net: makeCount(50)
+                });
+
+                await repository.saveActivity({
+                    date: "2026-09-29",
+                    filePath: "B.md",
+                    start: makeCount(0),
+                    added: makeCount(50),
+                    deleted: makeCount(0),
+                    net: makeCount(50)
+                });
+
+                const service = 
+                    new DailyHistoryService(
+                        repository
+                    );
+
+                const summary =
+                    await service.getSummary(
+                        "2026-09-27",
+                        "2026-09-29"
+                    );
+
+                expect(
+                    summary.bestWritingDay
+                ).toEqual({
+                    date: "2026-09-29",
+                    added: 50
+                });
+            }
+        );
+
+        test(
+            "日期范围内没有新增内容时没有最佳写作日",
+            async () => {
+                const repository =
+                    new MemoryStatsRepository();
+
+                await repository.saveActivity({
+                    date: "2026-09-28",
+                    filePath: "A.md",
+                    start: makeCount(10),
+                    added: makeCount(0),
+                    deleted: makeCount(5),
+                    net: makeCount(-5)
+                });
+
+                const service =
+                    new DailyHistoryService(
+                        repository
+                    );
+
+                const summary =
+                    await service.getSummary(
+                        "2026-09-27",
+                        "2026-09-29"
+                    );
+
+                expect(
+                    summary.bestWritingDay
+                ).toBeNull();
+            }
+        );
     }
 );

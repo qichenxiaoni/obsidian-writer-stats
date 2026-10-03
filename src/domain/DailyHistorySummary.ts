@@ -1,6 +1,9 @@
 import type {
     DailyHistoryEntry
 } from "./DailyHistoryEntry";
+import type {
+    BestWritingDay
+} from "./BestWritingDay";
 
 export interface DailyHistorySummary {
     startDate: string;
@@ -16,6 +19,8 @@ export interface DailyHistorySummary {
 
     // 当前查询区间内最长连续写作天数
     longesWritingStreak: number;
+
+    bestWritingDay: BestWritingDay | null;
 
     added: number;
 
