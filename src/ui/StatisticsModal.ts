@@ -670,6 +670,10 @@ export class StatisticsModal extends Modal {
         await renderRange(
             7
         );
+
+        await this.renderYearHeatmap(
+            section
+        );
     }
 
     private renderHistorySummary(
@@ -1037,5 +1041,387 @@ export class StatisticsModal extends Modal {
         return (
             `${parts[1]}/${parts[2]}`
         );
+    }
+
+    private async renderYearHeatmap(
+        container: HTMLElement
+    ): Promise<void> {
+        const summary =
+            await this.historyService
+                .getRecentSummary(
+                    this.date,
+                    365
+                );
+
+        const section =
+            container.createDiv({
+                cls:
+                    "writer-stats-modal__heatmap"
+            });
+
+        // Header
+
+        const header =
+            section.createDiv({
+                cls:
+                    "writer-stats-modal__heatmap-header"
+            });
+
+        header.createDiv({
+            cls:
+                "writer-stats-modal__heatmap-title",
+            text:
+                "最近一年"
+        });
+
+        header.createDiv({
+            cls:
+                "writer-stats-modal__heatmap-summary",
+
+            text:
+                `${summary.activeDays} 个活跃日 · +${summary.added}`
+        });
+
+        const firstWeekday =
+            this.getHeatmapWeekday(
+                summary.days[0]?.date
+            );
+
+        const weekCount =
+            Math.ceil(
+                (
+                    firstWeekday +
+                    summary.days.length
+                ) / 7
+            );
+
+        const monthsRow =
+            section.createDiv({
+                cls:
+                    "writer-stats-modal__heatmap-months"
+            });
+
+        monthsRow.style.setProperty(
+            "--writer-stats-heatmap-weeks",
+            String(
+                weekCount
+            )
+        );
+
+        /*
+ * =========================
+ * Month labels
+ * =========================
+ *
+ * 每个月份标签横跨该月份实际占用的 week columns，
+ * 而不是只占一个几像素宽的 column。
+ */
+
+        type HeatmapMonth = {
+            label: string;
+            startColumn: number;
+        };
+
+
+        const months: HeatmapMonth[] =
+            [];
+
+        let previousMonthKey = "";
+
+
+        for (
+            let index = 0;
+            index < summary.days.length;
+            index++
+        ) {
+            const day =
+                summary.days[index];
+
+            const monthKey =
+                day.date.slice(
+                    0,
+                    7
+                );
+
+            if (
+                monthKey ===
+                previousMonthKey
+            ) {
+                continue;
+            }
+
+            previousMonthKey =
+                monthKey;
+
+
+            const startColumn =
+                Math.floor(
+                    (
+                        firstWeekday +
+                        index
+                    ) / 7
+                ) + 1;
+
+
+            months.push({
+                label:
+                    `${Number(
+                        day.date.slice(
+                            5,
+                            7
+                        )
+                    )}月`,
+
+                startColumn
+            });
+        }
+
+
+        for (
+            let index = 0;
+            index < months.length;
+            index++
+        ) {
+            const month =
+                months[index];
+
+            /*
+             * 当前月份一直延伸到：
+             *
+             * 下个月开始的 column
+             *
+             * 如果已经是最后一个月，
+             * 则一直延伸到 Heatmap 最后一列。
+             */
+            const nextStartColumn =
+                index <
+                    months.length - 1
+                    ? months[
+                        index + 1
+                    ].startColumn
+                    : weekCount + 1;
+
+
+            const span =
+                Math.max(
+                    1,
+                    nextStartColumn -
+                    month.startColumn
+                );
+
+
+            const label =
+                monthsRow.createDiv({
+                    cls:
+                        "writer-stats-modal__heatmap-month",
+
+                    text:
+                        month.label
+                });
+
+
+            label.style.gridColumn =
+                `${month.startColumn} / span ${span}`;
+        }
+
+        const body =
+            section.createDiv({
+                cls:
+                    "writer-stats-modal__heatmap-body"
+            });
+
+        const weekdays =
+            body.createDiv({
+                cls:
+                    "writer-stats-modal__heatmap-weekdays"
+            });
+
+        [
+            "日",
+            "一",
+            "二",
+            "三",
+            "四",
+            "五",
+            "六"
+        ].forEach(
+            label => {
+                weekdays.createDiv({
+                    cls:
+                        "writer-stats-modal__heatmap-weekday",
+                    text:
+                        label
+                });
+            }
+        );
+
+
+        const grid =
+            body.createDiv({
+                cls:
+                    "writer-stats-modal__heatmap-grid"
+            });
+
+        grid.style.setProperty(
+            "--writer-stats-heatmap-week",
+            String(
+                weekCount
+            )
+        );
+
+        const maxAdded =
+            Math.max(
+                0,
+                ...summary.days.map(
+                    day =>
+                        day.added
+                )
+            );
+
+        for (
+            let index = 0;
+            index < summary.days.length;
+            index++
+        ) {
+            const day =
+                summary.days[index];
+
+            const absolutePosition =
+                firstWeekday +
+                index;
+
+            const column =
+                Math.floor(
+                    absolutePosition / 7
+                ) + 1;
+
+            const row =
+                (
+                    absolutePosition %
+                    7
+                ) + 1;
+
+            const cell =
+                grid.createDiv({
+                    cls:
+                        "writer-stats-modal__heatmap-cell"
+                });
+
+            cell.style.gridColumn =
+                String(
+                    column
+                );
+
+            cell.style.gridRow =
+                String(
+                    row
+                );
+
+            const level =
+                this.getHeatmapLevel(
+                    day.added,
+                    maxAdded
+                );
+
+            cell.classList.add(
+                `level-${level}`
+            );
+
+            cell.setAttribute(
+                "title",
+                [
+                    day.date,
+                    `新增：${this.formatHistorySigned(day.added)}`,
+                    `删除：${day.deleted}`,
+                    `净增长：${this.formatHistorySigned(day.net)}`
+                ].join("\n")
+            );
+        }
+
+        const legend =
+            section.createDiv({
+                cls:
+                    "writer-stats-modal__heatmap-legend"
+            });
+
+        legend.createSpan({
+            text:
+                "少"
+        });
+
+        for (
+            let level = 0;
+            level <= 4;
+            level++
+        ) {
+            const cell =
+                legend.createDiv({
+                    cls:
+                        "writer-stats-modal__heatmap-legend-cell"
+                });
+
+            cell.classList.add(
+                `level-${level}`
+            );
+        }
+
+        legend.createSpan({
+            text: "多"
+        });
+    }
+
+    private getHeatmapWeekday(
+        date?: string
+    ): number {
+        if (!date) {
+            return 0;
+        }
+
+        const parsed =
+            new Date(
+                `${date}T00:00:00Z`
+            );
+
+        if (
+            Number.isNaN(
+                parsed.getTime()
+            )
+        ) {
+            return 0;
+        }
+
+        return parsed.getUTCDay();
+    }
+
+    private getHeatmapLevel(
+        value: number,
+        maxValue: number
+    ): number {
+        if (
+            value <= 0 ||
+            maxValue <= 0
+        ) {
+            return 0;
+        }
+
+        const ratio =
+            Math.sqrt(
+                value /
+                maxValue
+            );
+
+        if (ratio <= 0.25) {
+            return 1;
+        }
+
+        if (ratio <= 0.5) {
+            return 2;
+        }
+
+        if (ratio <= 0.75) {
+            return 3;
+        }
+
+        return 4;
     }
 }

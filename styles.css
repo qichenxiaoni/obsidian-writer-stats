@@ -16,7 +16,11 @@
    ======================================== */
 
 .writer-stats-modal {
-  min-width: 560px;
+  min-width: 0;
+
+  max-width: 100%;
+
+  overflow-x: clip;
 }
 
 .writer-stats-modal__date {
@@ -742,4 +746,275 @@
 
 .writer-stats-modal__trend-axis-label.is-last {
   text-align: right;
+}
+
+/* Writer Stats - Year Heatmap */
+
+.writer-stats-modal__heatmap {
+  margin-top: 22px;
+  margin-bottom: 18px;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  box-sizing:
+    border-box;
+
+  overflow: hidden;
+}
+
+.writer-stats-modal__heatmap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 10px;
+}
+
+.writer-stats-modal__heatmap-title {
+  color: var(--text-accent);
+
+  font-size: 1.05em;
+  font-weight: 600;
+}
+
+.writer-stats-modal__heatmap-summary {
+  color: var(--text-muted);
+
+  font-size: var(--font-ui-smaller);
+
+  font-variant-numeric: tabular-nums;
+}
+
+/* Month labels */
+
+.writer-stats-modal__heatmap-months {
+  display: grid;
+
+  grid-template-columns:
+    repeat(var(--writer-stats-heatmap-weeks),
+      minmax(0, 1fr));
+
+  column-gap: 2px;
+
+  /*
+   * 必须与 weekday + body gap 一致：
+   *
+   * weekday = 17px
+   * gap     = 5px
+   */
+  padding-left: 22px;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  box-sizing:
+    border-box;
+
+  margin-bottom: 5px;
+
+  min-height: 14px;
+
+  overflow: hidden;
+}
+
+.writer-stats-modal__heatmap-month {
+  min-width: 0;
+
+  overflow: hidden;
+
+  color:
+    var(--text-faint);
+
+  font-size: 8px;
+
+  line-height: 1.2;
+
+  white-space: nowrap;
+
+  text-overflow: clip;
+
+  text-align: left;
+}
+
+/* Body */
+
+.writer-stats-modal__heatmap-body {
+  display: grid;
+
+  grid-template-columns:
+    17px minmax(0, 1fr);
+
+  column-gap: 5px;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  box-sizing:
+    border-box;
+
+  overflow: hidden;
+}
+
+.writer-stats-modal__heatmap-weekdays {
+  display: grid;
+
+  grid-template-rows:
+    repeat(7,
+      8px);
+
+  row-gap: 2px;
+
+  width: 17px;
+  min-width: 0;
+
+  overflow: hidden;
+}
+
+.writer-stats-modal__heatmap-weekday {
+  min-width: 0;
+
+  color:
+    var(--text-faint);
+
+  font-size: 8px;
+
+  line-height: 8px;
+
+  text-align: right;
+
+  white-space: nowrap;
+}
+
+/* Grid */
+
+.writer-stats-modal__heatmap-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(var(--writer-stats-heatmap-weeks),
+      minmax(0, 1fr));
+
+  grid-template-rows:
+    repeat(7,
+      8px);
+
+  column-gap: 2px;
+  row-gap: 2px;
+
+  /*
+   * 这是控制横向溢出的核心。
+   */
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  box-sizing:
+    border-box;
+
+  overflow: hidden;
+}
+
+.writer-stats-modal__heatmap-cell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  height: 8px;
+
+  box-sizing:
+    border-box;
+
+  border-radius: 2px;
+
+  cursor: default;
+
+  transition:
+    transform 100ms ease,
+    opacity 100ms ease;
+}
+
+.writer-stats-modal__heatmap-cell:hover {
+  transform: scale(1.35);
+
+  position: relative;
+
+  z-index: 2;
+}
+
+/* Intensity */
+
+.writer-stats-modal__heatmap-cell.level-0,
+.wirter-stats-modal__heatmap-legend-cell.level-0 {
+  background: var(--background-modifier-border);
+  opacity: 0.8;
+}
+
+.writer-stats-modal__heatmap-cell.level-1,
+.writer-stats-modal__heatmao-legend-cell.level-1 {
+  background: var(--interactive-accent);
+
+  opacity: 0.4;
+}
+
+.writer-stats-modal__heatmap-cell.level-2,
+.writer-stats-modal__heatmao-legend-cell.level-2 {
+  background: var(--interactive-accent);
+
+  opacity: 0.6;
+}
+
+.writer-stats-modal__heatmap-cell.level-3,
+.wirter-stats-modal__heatmap-legend-cell.level-3 {
+  background: var(--interactive-accent);
+
+  opacity: 0.8;
+}
+
+.writer-stats-modal__heatmap-cell.level-4,
+.wirter-stats-modal__heatmap-legend-cell.level-4 {
+  background: var(--interactive-accent);
+  opacity: 1;
+}
+
+/* Legend */
+
+.writer-stats-modal__heatmap-legend {
+  display: flex;
+
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 4px;
+
+  margin-top: 8px;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  box-sizing:
+    border-box;
+
+  overflow: hidden;
+
+  color:
+    var(--text-faint);
+
+  font-size:
+    var(--font-ui-smaller);
+}
+
+.writer-stats-modal__heatmap-legend-cell {
+  display: inline-block;
+
+  width: 8px;
+  height: 8px;
+
+  border-radius: 2px;
 }
