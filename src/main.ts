@@ -14,6 +14,7 @@ import { WriterStatsSettingTab } from "./ui/WriterStatsSettingTab";
 import { GoalService } from "./core/GoalService";
 import { DailyOverviewService } from "./core/DailyOverviewService";
 import { DailyHistoryService } from "./core/DailyHistoryService";
+import { WRITER_STATS_VIEW_TYPE,WriterStatsView } from "./ui/WriterStatsView";
 
 export default class WordCountPlugin extends Plugin {
     private activityTracker!: ActivityTracker;
@@ -77,6 +78,15 @@ export default class WordCountPlugin extends Plugin {
         this.vaultEvents = new VaultEventController(this,this.repository);
         this.vaultEvents.start();
 
+        this.registerView(
+            WRITER_STATS_VIEW_TYPE,
+
+            leaf =>
+                new WriterStatsView(
+                    leaf
+                )
+        );
+
         this.addCommand({
             id: "show-word-count-test-nitice",
             name: "测试插件是否正常运行",
@@ -113,6 +123,27 @@ export default class WordCountPlugin extends Plugin {
             }
         });
 
+        this.addCommand({
+            id:
+                "open-writer-stats-dashboard",
+
+            name:
+                "打开 Writer Stats Dashboard",
+
+            callback:
+                async () => {
+                    await this.openWriterStatsDashboard();
+                }
+        });
+
+        this.addRibbonIcon(
+            "bar-chart-3",
+            "打开 Writer Stats Dashboard",
+            async () => {
+                await this.openWriterStatsDashboard();
+            }
+        );
+
         this.addSettingTab(
             new WriterStatsSettingTab(
                 this.app,
@@ -126,7 +157,50 @@ export default class WordCountPlugin extends Plugin {
         );
     }
 
+    private async openWriterStatsDashboard(): Promise<void> {
+        const existingLeaves =
+            this.app.workspace
+                .getLeavesOfType(
+                    WRITER_STATS_VIEW_TYPE
+                );
+
+            if (
+                existingLeaves.length > 0
+            ) {
+                await this.app.workspace
+                    .revealLeaf(
+                        existingLeaves[0]
+                    );
+
+                return;
+            }
+
+            const leaf =
+                this.app.workspace
+                    .getLeaf(
+                        "tab"
+                    );
+
+            await leaf.setViewState({
+                type:
+                    WRITER_STATS_VIEW_TYPE,
+
+                active:
+                    true
+            });
+
+            await this.app.workspace
+                .revealLeaf(
+                    leaf
+                );
+    }
+
     onunload(): void {
+
+        this.app.workspace
+            .detachLeavesOfType(
+                WRITER_STATS_VIEW_TYPE
+            );
         this.editorEvents?.stop();
         this.statusBar?.stop();
 
