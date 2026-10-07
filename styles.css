@@ -950,7 +950,7 @@
 /* Intensity */
 
 .writer-stats-modal__heatmap-cell.level-0,
-.wirter-stats-modal__heatmap-legend-cell.level-0 {
+.writer-stats-modal__heatmap-legend-cell.level-0 {
   background: var(--background-modifier-border);
   opacity: 0.8;
 }
@@ -970,14 +970,14 @@
 }
 
 .writer-stats-modal__heatmap-cell.level-3,
-.wirter-stats-modal__heatmap-legend-cell.level-3 {
+.writer-stats-modal__heatmap-legend-cell.level-3 {
   background: var(--interactive-accent);
 
   opacity: 0.8;
 }
 
 .writer-stats-modal__heatmap-cell.level-4,
-.wirter-stats-modal__heatmap-legend-cell.level-4 {
+.writer-stats-modal__heatmap-legend-cell.level-4 {
   background: var(--interactive-accent);
   opacity: 1;
 }
@@ -1031,11 +1031,21 @@
   overflow-x: hidden;
 
   padding: 
-    32px
-    40px
+    clamp(
+      18px,
+      3vw,
+      32px
+    )
+    clamp(
+      16px,
+      4vw,
+      40px
+    )
     48px;
 
   box-sizing: border-box;
+
+  container-type: inline-size;
 }
 
 /* Header */
@@ -1082,9 +1092,11 @@
 
   min-width: 0;
   margin: 0 auto;
+
+  container-type: inline-size;
 }
 
-.writer-stats-dashboard__welcome {
+/* .writer-stats-dashboard__welcome {
   padding: 28px 30px;
 
   border: 1px solid var(--background-modifier-border);
@@ -1107,6 +1119,339 @@
   color: var(--text-muted);
 
   line-height: 1.6;
+} */
+
+/* Writer Stats Dashboard - Overview */
+
+.writer-stats-dashboard__section {
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 36px;
+}
+
+.writer-stats-dashboard__section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.writer-stats-dashboard__section-title {
+  margin: 0 0 16px;
+  color: var(--text-normal);
+  font-size: 1.25em;
+  font-weight: 600;
+}
+
+.writer-stats-dashboard__section-header,
+.writer-stats-dashboard__section-title {
+  margin-bottom: 0;
+}
+
+.writer-stats-dashboard__section-range {
+  color: var(--text-muted);
+
+  font-size: var(--font-ui-small);
+
+  font-variant-numeric: tabular-nums;
+}
+
+/* Today metrics */
+
+.writer-stats-dashboard__metrics {
+  display: grid;
+
+  grid-template-columns: repeat(
+    4,
+    minmax(0,1fr)
+  );
+
+  gap: 14px;
+
+  width: 100%;
+  min-width: 0;
+}
+
+.writer-stats-dashboard__metric {
+  min-width: 0;
+  padding: 20px 22px;
+
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 14px;
+
+  background: var(--background-secondary);
+}
+
+.writer-stats-dashboard__metric-label {
+  color: var(--text-muted);
+
+  font-size: var(--font-ui-small);
+
+  font-weight: 500;
+}
+
+.writer-stats-dashboard__metric-value {
+  margin-top: 8px;
+
+  color: var(--text-normal);
+
+  font-size: 2em;
+
+  font-weight: 600;
+
+  line-height: 1;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.writer-stats-dashboard__metric-description {
+  margin-top: 10px;
+
+  color: var(--text-faint);
+
+  font-size: var(--font-ui-smaller);
+}
+
+/* Goal */
+
+.writer-stats-dashboard__goal {
+  margin-top: 16px;
+
+  padding: 22px;
+
+  border: 1px solid var(--background-modifier-border);
+
+  border-radius: 14px;
+
+  background: var(--background-secondary);
+}
+
+.writer-stats-dashboard__goal-header {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+}
+
+.writer-stats-dashboard__goal-title {
+  color: var(--text-normal);
+
+  font-size: 1.05em;
+
+  font-weight: 600;
+}
+
+.writer-stats-dashboard__goal-count {
+  margin-top: 5px;
+
+  color: var(--text-muted);
+
+  font-variant-numeric: tabular-nums;
+}
+
+.writer-stats-dashboard__goal-percentage {
+  color: var(--text-muted);
+
+  font-size: 1.6em;
+
+  font-weight: 600;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.writer-stats-dashboard__goal-track {
+  width: 100%;
+  height: 8px;
+
+  margin-top: 18px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: var(--background-modifier-border);
+}
+
+.writer-stats-dashboard__goal-bar {
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: var(--interactive-accent);
+
+  transition: width 180ms ease;
+}
+
+.writer-stats-dashboard__goal-footer {
+  margin-top: 10px;
+
+  color: var(--text-muted);
+
+  font-size: var(--font-ui-small);
+}
+
+/* 7-day overview */
+
+.writer-stats-dashboard__overview-grid {
+  display: grid;
+
+  grid-template-columns: repeat(
+    3,
+    minmax(0,1fr)
+  );
+
+  gap: 1px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--background-modifier-border);
+
+  border-radius: 14px;
+
+  background: var(--background-modifier-border);
+}
+
+.writer-stats-dashboard__overview-item {
+  min-width: 0;
+  padding: 20px 22px;
+  background: var(--background-secondary);
+}
+
+.writer-stats-dashboard__overview-label {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.writer-stats-dashboard__overview-value {
+  margin-top: 4px;
+
+  color: var(--text-normal);
+
+  font-size: 1.35em;
+
+  font-weight: 500;
+
+  font-variant-numeric: tabular-nums;
+}
+
+/* State */
+
+.writer-stats-dashboard__loading,
+.writer-stats-dashboard__error {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: 240px;
+
+  color: var(--text-muted);
+}
+
+.writer-stats-dashboard__metric-label,
+.writer-stats-dashboard__metric-description,
+.writer-stats-dashboard__overview-label,
+.writer-stats-dashboard__overview-value {
+  overflow-wrap:
+    normal;
+
+  word-break:
+    keep-all;
+}
+
+.writer-stats-dashboard__section-title {
+  white-space:
+    nowrap;
+}
+
+.writer-stats-dashboard__section-range {
+  font-variant-numeric:
+    tabular-nums;
+
+  white-space:
+    nowrap;
+}
+
+.writer-stats-dashboard__metrics {
+  grid-template-columns: repeat(
+    4,
+    minmax(0,1fr)
+  );
+}
+
+.writer-stats-dashboard__overview-grid {
+  grid-template-columns: repeat(
+    3,
+    minmax(0,1fr)
+  );
+}
+
+@container (
+  max-width: 760px
+) {
+  .writer-stats-dashboard__metrics {
+    grid-template-columns: repeat(
+      2,
+      minmax(0,1fr)
+    );
+  }
+
+  .writer-stats-dashboard__overview-grid {
+    grid-template-columns: repeat(
+      2,
+      minmax(0,1fr)
+    );
+  }
+}
+
+@container (
+  max-width: 430px
+) {
+  .writer-stats-dashboard__metrics {
+    grid-template-columns: minmax(
+      0,
+      1fr
+    );
+  }
+
+  .writer-stats-dashboard__overview-grid {
+    grid-template-columns: minmax(
+      0,
+      1fr
+    );
+  }
+
+  .writer-stats-dashboard__section-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 6px;
+  }
+
+  .writer-stats-dashboard__section-range {
+    width: 100%;
+
+    white-space: nowrap;
+  }
+}
+
+@container (
+  max-width: 600px
+) {
+
+  .writer-stats-dashboard__header,
+  .writer-stats-dashboard__content {
+    /*
+     * 这里不需要额外宽度，
+     * 只是保证内部允许继续收缩。
+     */
+    min-width: 0;
+  }
 }
 
 /* Narrow workspace */

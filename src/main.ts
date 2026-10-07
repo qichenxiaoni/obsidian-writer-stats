@@ -71,6 +71,8 @@ export default class WordCountPlugin extends Plugin {
                 await this.statusBar.refresh(
                     date
                 ); 
+
+                await this.refreshWriterStatsDashboard();
             }
         )
         this.editorEvents.start();
@@ -83,7 +85,9 @@ export default class WordCountPlugin extends Plugin {
 
             leaf =>
                 new WriterStatsView(
-                    leaf
+                    leaf,
+                    this.dailyOverviewService,
+                    this.dailyHistoryService
                 )
         );
 
@@ -152,6 +156,8 @@ export default class WordCountPlugin extends Plugin {
 
                 async () => {
                     await this.statusBar.refresh();
+
+                    await this.refreshWriterStatsDashboard();
                 }
             )
         );
@@ -194,6 +200,27 @@ export default class WordCountPlugin extends Plugin {
                     leaf
                 );
     }
+
+    private async refreshWriterStatsDashboard():
+        Promise<void> {
+            const leaves =
+                this.app.workspace
+                    .getLeavesOfType(
+                        WRITER_STATS_VIEW_TYPE
+                    );
+
+            for (const leaf of leaves) {
+                const view =
+                    leaf.view;
+
+                if (
+                    view instanceof
+                    WriterStatsView
+                ) {
+                    await view.refresh();
+                }
+            }
+        }
 
     onunload(): void {
 

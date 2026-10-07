@@ -30,7 +30,7 @@ export class StatusBarController {
 
         if (this.onClick) {
             this.element.addClass(
-                "wirter-stats-status-bar--clickable"
+                "writer-stats-status-bar--clickable"
             );
 
             this.plugin.registerDomEvent(
