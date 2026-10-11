@@ -1030,18 +1030,12 @@
   overflow-y: auto;
   overflow-x: hidden;
 
-  padding: 
-    clamp(
-      18px,
+  padding:
+    clamp(18px,
       3vw,
-      32px
-    )
-    clamp(
-      16px,
+      32px) clamp(16px,
       4vw,
-      40px
-    )
-    48px;
+      40px) 48px;
 
   box-sizing: border-box;
 
@@ -1163,10 +1157,8 @@
 .writer-stats-dashboard__metrics {
   display: grid;
 
-  grid-template-columns: repeat(
-    4,
-    minmax(0,1fr)
-  );
+  grid-template-columns: repeat(4,
+      minmax(0, 1fr));
 
   gap: 14px;
 
@@ -1299,10 +1291,8 @@
 .writer-stats-dashboard__overview-grid {
   display: grid;
 
-  grid-template-columns: repeat(
-    3,
-    minmax(0,1fr)
-  );
+  grid-template-columns: repeat(3,
+      minmax(0, 1fr));
 
   gap: 1px;
 
@@ -1377,52 +1367,36 @@
 }
 
 .writer-stats-dashboard__metrics {
-  grid-template-columns: repeat(
-    4,
-    minmax(0,1fr)
-  );
+  grid-template-columns: repeat(4,
+      minmax(0, 1fr));
 }
 
 .writer-stats-dashboard__overview-grid {
-  grid-template-columns: repeat(
-    3,
-    minmax(0,1fr)
-  );
+  grid-template-columns: repeat(3,
+      minmax(0, 1fr));
 }
 
-@container (
-  max-width: 760px
-) {
+@container (max-width: 760px) {
   .writer-stats-dashboard__metrics {
-    grid-template-columns: repeat(
-      2,
-      minmax(0,1fr)
-    );
+    grid-template-columns: repeat(2,
+        minmax(0, 1fr));
   }
 
   .writer-stats-dashboard__overview-grid {
-    grid-template-columns: repeat(
-      2,
-      minmax(0,1fr)
-    );
+    grid-template-columns: repeat(2,
+        minmax(0, 1fr));
   }
 }
 
-@container (
-  max-width: 430px
-) {
+@container (max-width: 430px) {
   .writer-stats-dashboard__metrics {
-    grid-template-columns: minmax(
-      0,
-      1fr
-    );
+    grid-template-columns: minmax(0,
+        1fr);
   }
 
   .writer-stats-dashboard__overview-grid {
-    grid-template-columns: minmax(
-      0,
-      1fr
-    );
+    grid-template-columns: minmax(0,
+        1fr);
   }
 
   .writer-stats-dashboard__section-header {
@@ -1440,9 +1414,7 @@
   }
 }
 
-@container (
-  max-width: 600px
-) {
+@container (max-width: 600px) {
 
   .writer-stats-dashboard__header,
   .writer-stats-dashboard__content {
@@ -1456,21 +1428,449 @@
 
 /* Narrow workspace */
 
-@media (
-  max-width: 700px
-) {
+@media (max-width: 700px) {
   .writer-stats-dashboard {
-    padding: 
-      22px
-      20px
-      36px;
+    padding:
+      22px 20px 36px;
 
-      .writer-stats-dashboard__header {
-        margin-bottom: 24px;
-      }
+    .writer-stats-dashboard__header {
+      margin-bottom: 24px;
+    }
 
-      .writer-stats-dashboard__welcome {
-        padding: 22px;
-      }
+    .writer-stats-dashboard__welcome {
+      padding: 22px;
+    }
   }
+}
+
+/* Writer Stats Dashboard History & Trend */
+
+/* 历史模块主体 */
+
+.writer-stats-dashboard__history {
+  width: 100%;
+  min-width: 0;
+}
+
+/* 标题与按钮 */
+
+.writer-stats-dashboard__history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.writer-stats-dashboard__history-header,
+.writer-stats-dashboard__section-title {
+  margin: 0;
+}
+
+
+/* ========================================
+   History Range Selector
+   ======================================== */
+
+/* 按钮组：始终使用中性背景 */
+
+.writer-stats-dashboard__history .writer-stats-dashboard__history-selector {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+
+  width: max-content;
+  max-width: 100%;
+  padding: 4px;
+  margin: 0;
+
+  box-sizing: border-box;
+
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+
+  background: var(--background-secondary) !important;
+  background-image: none !important;
+  outline: none;
+  box-shadow: none !important;
+}
+
+/* 未选中按钮：透明背景 */
+
+.writer-stats-dashboard__history .writer-stats-dashboard__history-selector button.writer-stats-dashboard__history-button {
+  appearance: none;
+
+  flex: 1;
+  min-width: 68px;
+  min-height: 36px;
+
+  padding: 8px 14px;
+  margin: 0;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: transparent !important;
+  background-image: none !important;
+  color: var(--text-normal) !important;
+
+  font-size: var(--font-ui-small);
+  font-weight: 500;
+  line-height: 1.3;
+
+  outline: none;
+  box-shadow: none;
+
+  cursor: pointer;
+}
+
+/* 未选中按钮悬停 */
+
+.writer-stats-dashboard__history .writer-stats-dashboard__history-selector button.writer-stats-dashboard__history-button:not([aria-pressed="true"]):hover {
+  background: var(--background-modifier-hover) !important;
+}
+
+/* 选中按钮：唯一使用强调色的位置 */
+
+
+/*
+ * History selector active state
+ *
+ * is-active 与 aria-pressed 双重匹配。
+ * 仅选中按钮使用主题强调色。
+ */
+
+.writer-stats-dashboard__history .writer-stats-dashboard__history-selector button.writer-stats-dashboard__history-button.is-active,
+
+.writer-stats-dashboard__history .writer-stats-dashboard__history-selector button.writer-stats-dashboard__history-button[aria-pressed="true"] {
+  background: var(--interactive-accent) !important;
+  background-image: none !important;
+
+  color: var(--text-on-accent) !important;
+  font-weight: 600;
+
+  opacity: 1;
+
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+
+/* 去除按钮组额外的焦点外框 */
+
+.writer-stats-dashboard__history .writer-stats-dashboard__history-selector:focus-within {
+  outline: none;
+  box-shadow: none !important;
+}
+
+/* 键盘操作仍显示焦点 */
+
+.writer-stats-dashboard__history .writer-stats-dashboard__history-selector button.writer-stats-dashboard__history-button:focus-visible {
+  outline: 2px solid var(--text-accent);
+  outline-offset: -2px;
+}
+
+
+/* 历史内容 */
+
+.writer-stats-dashboard__history-content {
+  width: 100%;
+  min-width: 0;
+}
+
+.writer-stats-dashboard__history-dates {
+  margin-bottom: 14px;
+
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  font-variant-numeric: tabular-nums;
+
+  overflow-wrap: anywhere;
+}
+
+.writer-stats-dashboard__history-loading,
+.writer-stats-dashboard__history-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 160px;
+
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Daily Trend */
+
+.writer-stats-dashboard__trend {
+  width: 100%;
+  min-width: 0;
+  margin-top: 22px;
+}
+
+.writer-stats-dashboard__trend-title {
+  margin-bottom: 10px;
+
+  color: var(--text-normal);
+  font-size: var(--font-ui-medium);
+  font-weight: 600;
+}
+
+.writer-stats-dashboard__trend-panel {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+
+  box-sizing: border-box;
+
+  padding: 18px 14px 12px;
+
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 14px;
+
+  background: var(--background-secondary);
+}
+
+/* 柱状图 */
+
+.writer-stats-dashboard__trend-plot {
+  display: grid;
+
+  grid-template-columns: repeat(var(--writer-stats-dashboard-trend-columns),
+      minmax(0, 1fr));
+
+  align-items: end;
+  gap: 4px;
+
+  width: 100%;
+  min-width: 0;
+  height: 170px;
+}
+
+.writer-stats-dashboard__trend-item {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+
+  cursor: default;
+}
+
+.writer-stats-dashboard__trend-bar {
+  width: 72%;
+  max-width: 28px;
+  min-width: 2px;
+
+  border-radius: 5px 5px 2px 2px;
+
+  background: var(--interactive-accent);
+  opacity: 0.72;
+
+  transform-origin: bottom center;
+
+  transition:
+    height 160ms ease,
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.writer-stats-dashboard__trend-item:hover .writer-stats-dashboard__trend-bar {
+  opacity: 1;
+  transform: scaleX(1.1);
+}
+
+/* 没有写作时显示淡色基线 */
+
+.writer-stats-dashboard__trend-bar.is-empty {
+  height: 2px !important;
+  background: var(--background-modifier-border);
+  opacity: 0.7;
+}
+
+/* 最佳写作日高亮 */
+
+.writer-stats-dashboard__trend-bar.is-best {
+  opacity: 1;
+  box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+/* 日期坐标轴 */
+
+.writer-stats-dashboard__trend-axis {
+  display: grid;
+
+  grid-template-columns: repeat(var(--writer-stats-dashboard-trend-columns),
+      minmax(0, 1fr));
+
+  gap: 4px;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 22px;
+
+  margin-top: 8px;
+}
+
+.writer-stats-dashboard__trend-axis-label {
+  min-width: 0;
+
+  color: var(--text-faint);
+  font-size: 9px;
+  line-height: 1.2;
+
+  text-align: center;
+  white-space: nowrap;
+}
+
+.writer-stats-dashboard__trend-axis-label.is-first {
+  text-align: left;
+}
+
+.writer-stats-dashboard__trend-axis-label.is-last {
+  text-align: right;
+}
+
+/* Best Writing Day */
+
+.writer-stats-dashboard__best-day {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  width: 100%;
+  min-width: 0;
+
+  margin-top: 12px;
+  padding: 14px 16px;
+
+  box-sizing: border-box;
+
+  border-radius: 12px;
+  background: var(--background-secondary);
+}
+
+.writer-stats-dashboard__best-day-label {
+  color: var(--text-muted);
+
+  font-size: var(--font-ui-small);
+  font-weight: 500;
+}
+
+.writer-stats-dashboard__best-day-value {
+  min-width: 0;
+
+  color: var(--text-normal);
+
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.writer-stats-dashboard__best-day-value.is-empty {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+/* Pane Responsive Layout */
+
+@container (max-width: 430px) {
+  .writer-stats-dashboard__history-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .writer-stats-dashboard__history-selector {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .writer-stats-dashboard__history-selector .writer-stats-dashboard__history-button {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .writer-stats-dashboard__trend-panel {
+    padding: 14px 8px 10px;
+  }
+
+  .writer-stats-dashboard__trend-plot {
+    height: 145px;
+    gap: 2px;
+  }
+
+  .writer-stats-dashboard__trend-axis {
+    gap: 2px;
+  }
+
+  .writer-stats-dashboard__trend-axis-label {
+    font-size: 8px;
+  }
+
+  .writer-stats-dashboard__best-day {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .writer-stats-dashboard__best-day-value {
+    width: 100%;
+    text-align: left;
+  }
+
+
+  /* 窄 Pane 历史区域布局 */
+
+  .writer-stats-dashboard__history .writer-stats-dashboard__history-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+
+    gap: 14px;
+    align-items: stretch;
+
+    margin-bottom: 20px;
+  }
+
+  /* 标题不保留额外外边距 */
+
+  .writer-stats-dashboard__history .writer-stats-dashboard__section-title {
+    margin: 0;
+  }
+
+  /* 两个按钮平分一行 */
+
+  .writer-stats-dashboard__history .writer-stats-dashboard__history-selector {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .writer-stats-dashboard__history .writer-stats-dashboard__history-selector button.writer-stats-dashboard__history-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* 日期与按钮组形成清晰分隔 */
+
+  .writer-stats-dashboard__history .writer-stats-dashboard__history-dates {
+    display: block;
+
+    margin: 0 0 18px;
+    padding: 0;
+
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
 }
