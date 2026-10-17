@@ -23,6 +23,24 @@ import {
     getLocalDateKey
 } from "../utils/DateService";
 
+import {
+    MonthlyStatsService,
+    shiftMonth
+} from "../core/MonthlyStatsService";
+
+import type {
+    MonthlyWritingSummary
+} from "../core/MonthlyStatsService";
+
+import type {
+    FileRankingService,
+    FileRankingSort
+} from "../core/FileRankingService";
+
+import {
+    renderFileRankingSection
+} from "./FileRankingSection";
+
 
 export const WRITER_STATS_VIEW_TYPE =
     "writer-stats-dashboard";
@@ -38,6 +56,15 @@ export class WriterStatsView
     // 防止多个异步 refresh 请求相互覆盖
     private refreshVersion = 0;
 
+    // 当前选择月份： null 表示当前自然月
+    private selectedMonth: string | null = null;
+
+    // 防止旧月份查询覆盖较新的结果
+    private monthlyRequestVersion = 0;
+
+    // 月份切换时保留用户选择的排行榜排序
+    private fileRankingSort: FileRankingSort = "added";
+
     constructor(
         leaf: WorkspaceLeaf,
 
@@ -45,7 +72,10 @@ export class WriterStatsView
             DailyOverviewService,
 
         private readonly historyService:
-            DailyHistoryService
+            DailyHistoryService,
+
+        private readonly fileRankingService:
+            FileRankingService
     ) {
         super(leaf);
     }
@@ -76,6 +106,9 @@ export class WriterStatsView
 
 
     async onClose(): Promise<void> {
+        ++this.refreshVersion;
+        ++this.monthlyRequestVersion;
+
         this.contentEl.empty();
     }
 
@@ -87,6 +120,9 @@ export class WriterStatsView
         // 标识本次刷新，避免较慢的旧请求覆盖新结果
 
         const currentVersion = ++this.refreshVersion;
+
+        // 整体刷新时，让上一次月度请求失败
+        ++this.monthlyRequestVersion;
 
         // 
         const previousScrollTop = container.scrollTop;
@@ -134,6 +170,12 @@ export class WriterStatsView
                 content,
                 date,
                 history
+            );
+
+            // 在7/30天历史模块下方显示月度统计
+            this.renderMonthlySection(
+                content,
+                date
             );
 
             container.scrollTop = previousScrollTop;
@@ -298,7 +340,7 @@ export class WriterStatsView
         initialSummary: DailyHistorySummary
     ): void {
         const section = container.createDiv({
-            cls:[
+            cls: [
                 "writer-stats-dashboard__section",
                 "writer-stats-dashboard__history"
             ],
@@ -776,11 +818,379 @@ export class WriterStatsView
         return `${parts[1]}/${parts[2]}`;
     }
 
+    // 月度统计入口，与现有7/30天历史统计独立
+    private renderMonthlySection(
+        container: HTMLElement,
+        today: string
+    ): void {
+        let month = this.selectedMonth ?? today.slice(0, 7);
+
+        const service = new MonthlyStatsService(this.historyService);
+
+        // 使用独立的CSS 类名
+        const section = container.createDiv({
+            cls: [
+                "writer-stats-dashboard__section",
+                "writer-stats-dashboard__monthly"
+            ]
+        });
+
+        const header = section.createDiv({
+            cls:
+                "writer-stats-dashboard__monthly-header"
+        });
+
+        header.createEl("h2", {
+            cls:
+                "writer-stats-dashboard__section-title",
+            text: "月度统计"
+        });
+
+        const navigation = header.createDiv({
+            cls:
+                "writer-stats-dashboard__month-nav"
+        });
+
+        const previous = navigation.createEl(
+            "button",
+            {
+                cls:
+                    "writer-stats-dashboard__month-button",
+                text: "‹"
+            }
+        );
+
+        previous.type = "button";
+        previous.setAttribute(
+            "aria-label",
+            "上一个月"
+        );
+
+        const label = navigation.createSpan({
+            cls:
+                "writer-stats-dashboard__month-label"
+        });
+
+        const next = navigation.createEl(
+            "button",
+            {
+                cls:
+                    "writer-stats-dashboard__month-button",
+                text: "›"
+            }
+        );
+
+        next.type = "button";
+        next.setAttribute(
+            "aria-label",
+            "下一个月"
+        );
+
+        const content = section.createDiv({
+            cls:
+                "writer-stats-dashboard__monthly-content"
+        });
+
+        content.createDiv({
+            cls:
+                "writer-stats-dashboard__history-loading",
+            text: "正在加载月度统计....."
+        });
+
+        // 查询月份数据
+        const load = async (): Promise<void> => {
+            const version = ++this.monthlyRequestVersion;
+
+            const requestedMonth = month;
+
+            const [year, monthNumber] = requestedMonth.split("-");
+
+            label.setText(
+                `${year}年${Number(monthNumber)}月`
+            );
+
+            previous.disabled = requestedMonth <= "1000-01";
+
+            next.disabled = requestedMonth >= today.slice(0, 7);
+
+            // content.empty();
+
+            // content.createDiv({
+            //     cls:
+            //         "writer-stats-dashboard__history-loading",
+            //     text:"正在加载月度统计...."
+            // });
+
+
+            /*
+             * 不再清空已经显示的月度统计。
+             * 新请求完成前保留旧内容，并标记正在更新。
+             */
+            content.addClass("is-updating");
+            content.setAttribute("aria-busy", "true");
+
+
+            try {
+                const summary =
+                    await service.getMonthSummary(
+                        requestedMonth,
+                        today
+                    );
+
+                if (
+                    version !== this.monthlyRequestVersion ||
+                    !content.isConnected
+                ) {
+                    return;
+                }
+
+                content.empty();
+
+                this.renderMonthlyContent(
+                    content,
+                    summary
+                );
+
+                // 月度统计完成后，加载同一月份的文件排行榜。
+                // 排行榜加载失败，不影响前面已经显示的月度数据
+                this.renderMonthlyFileRanking(
+                    content,
+                    summary
+                );
+
+                content.removeClass("is-updating");
+                content.setAttribute("aria-busy", "false");
+            } catch (error) {
+                if (
+                    version !== this.monthlyRequestVersion ||
+                    !content.isConnected
+                ) {
+                    return;
+                }
+
+                console.error(
+                    "[Writer Stats] 月度统计加载失败",
+                    error
+                );
+
+                content.empty();
+
+                content.createDiv({
+                    cls:
+                        "writer-stats-dashboard__history-error",
+                    text: "月度统计加载失败，请切换月份重试"
+                });
+
+                content.removeClass("is-updating");
+                content.setAttribute("aria-busy", "false");
+            }
+        };
+
+        // 上个月
+        previous.addEventListener("click", () => {
+            if (month <= "1000-01") {
+                return;
+            }
+
+            month = shiftMonth(month, -1);
+
+            this.selectedMonth = month;
+
+            void load();
+        });
+
+        // 下个月
+        next.addEventListener("click", () => {
+            if (month >= today.slice(0, 7)) {
+                return;
+            }
+
+            month = shiftMonth(month, 1);
+
+            this.selectedMonth = month;
+
+            void load();
+        });
+
+        // 首次加载
+        void load();
+    }
+
+    // 月度统计内容
+
+    private renderMonthlyContent(
+        container: HTMLElement,
+        summary: MonthlyWritingSummary
+    ): void {
+        container.createDiv({
+            cls:
+                "writer-stats-dashboard__monthly-dates",
+            text:
+                `${summary.startDate} ~ ${summary.endDate}` +
+                (
+                    summary.isCurrentMonth
+                        ? " · 截至今天"
+                        : ""
+                )
+        });
+
+        // 月度汇总
+        const grid = container.createDiv({
+            cls:
+                "writer-stats-dashboard__overview-grid"
+        });
+
+        this.createOverviewItem(
+            grid,
+            "新增",
+            this.formatSigned(summary.added)
+        );
+
+        this.createOverviewItem(
+            grid,
+            "删除",
+            String(summary.deleted)
+        );
+
+        this.createOverviewItem(
+            grid,
+            "净增长",
+            this.formatSigned(summary.net)
+        );
+
+        this.createOverviewItem(
+            grid,
+            "活跃天数",
+            `${summary.activeDays} / ${summary.totalDays}`
+        );
+
+        // 空记录壮体啊
+
+        if (summary.isEmpty) {
+            container.createDiv({
+                cls:
+                    "writer-stats-dashboard__monthly-empty",
+                text:
+                    "这个月暂无写作记录"
+            });
+
+            return;
+        }
+
+        /*
+        * MonthlyWritingSummary 继承自
+        * DailyHistorySummary。
+        *
+        * 因此可以直接复用已存在的趋势图，
+        * 不需要再次实现绘图方法。
+        */
+
+        this.renderHistoryTrend(
+            container,
+            summary
+        );
+
+        // 最佳写作日
+        const best = container.createDiv({
+            cls:
+                "writer-stats-dashboard__best-day"
+        });
+
+        best.createDiv({
+            cls:
+                "writer-stats-dashboard__best-label",
+            text: "本月最佳写作日"
+        });
+
+        best.createDiv({
+            cls:
+                "writer-stats-dashboard__best-day-value",
+            text: summary.bestWritingDay
+                ? (
+                    `${summary.bestWritingDay.date} · ` +
+                    this.formatSigned(summary.bestWritingDay.added)
+                )
+                : "本月暂无新增记录"
+        });
+    }
+
     /*
      * ========================================
      * Metric Card
      * ========================================
      */
+
+    /**
+    * 加载月度文件排行榜。
+    *
+    * 月度主统计已经渲染完成，
+    * 排行榜失败不影响月度汇总。
+    *
+    * monthlyRequestVersion 负责防止
+    * 旧月份的结果覆盖新界面。
+    */
+
+    private renderMonthlyFileRanking(
+        container: HTMLElement,
+        summary: MonthlyWritingSummary
+    ): void {
+        const host = container.createDiv({
+            cls:
+                "writer-stats-dashboard__ranking-host"
+        });
+
+        host.createDiv({
+            cls:
+                "writer-stats-dashboard__history-loading",
+            text:"正在加载文件排行榜"
+        });
+
+        const version = this.monthlyRequestVersion;
+
+        void this.fileRankingService.getRanking(
+            summary.startDate,
+            summary.endDate
+        ).then(ranking => {
+            if (
+                version !== this.monthlyRequestVersion ||
+                !host.isConnected
+            ) {
+                return;
+            }
+
+            host.empty();
+
+            renderFileRankingSection(
+                host,
+                this.app,
+                ranking,
+                this.fileRankingSort,
+                sort => {
+                    this.fileRankingSort = sort;
+                }
+            );
+        }).catch(error => {
+            if (
+                version !== this.monthlyRequestVersion ||
+                !host.isConnected
+            ){
+                return;
+            }
+
+            console.error(
+                "[Writer Stats] 文件排行榜加载失败",
+                error
+            );
+
+            host.empty();
+
+            host.createDiv({
+                cls:
+                    "writer-stats-dashboard__history-error",
+                text: "文件排行榜加载失败，请切换月份重试"
+            });
+        });
+    }
 
     private createMetricCard(
         container: HTMLElement,

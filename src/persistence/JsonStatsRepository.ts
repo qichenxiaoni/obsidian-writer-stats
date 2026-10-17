@@ -178,7 +178,7 @@ export class JsonStatsRepository
         endDate: string
     ): Promise<DailyFileActivity[]> {
         const data =
-            await this.store.load();
+            await this.loadData();
 
         return Object.values(
             data.dailyActivities

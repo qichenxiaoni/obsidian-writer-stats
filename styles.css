@@ -1874,3 +1874,537 @@
   }
 
 }
+
+/* Dashboard Monthly Statistics */
+
+.writer-stats-dashboard__monthly {
+  min-width: 0;
+}
+
+/* 月度标题与导航 */
+
+.writer-stats-dashboard__monthly-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.writer-stats-dashboard__monthly-header .writer-stats-dashboard__section-title {
+  margin: 0;
+}
+
+.writer-stats-dashboard__month-nav {
+  display: grid;
+
+  grid-template-columns: 36px minmax(110px, auto) 36px;
+
+  align-items: center;
+
+  gap: 8px;
+  min-width: 0;
+}
+
+.writer-stats-dashboard__month-label {
+  color: var(--text-normal);
+  font-weight: 600;
+
+  text-align: center;
+  white-space: nowrap;
+
+  font-variant-numeric: tabular-nums;
+}
+
+/* 月份切换按钮 */
+
+.writer-stats-dashboard__month-nav button.writer-stats-dashboard__month-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+  min-width: 0;
+
+  margin: 0;
+  padding: 0;
+
+  border: 1px solid var(--background-modifier-border);
+
+  border-radius: 8px;
+
+  background: var(--background-secondary);
+  background-image: none;
+
+  box-shadow: none;
+  color: var(--text-normal);
+
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.writer-stats-dashboard__month-nav button.writer-stats-dashboard__month-button:hover:not(:disabled) {
+  background: var(--background-modifier-hover);
+}
+
+.writer-stats-dashboard__month-nav button.writer-stats-dashboard__month-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.writer-stats-dashboard__month-nav button.writer-stats-dashboard__month-button:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+/* 月度内容 */
+
+.writer-stats-dashboard__monthly-content,
+.writer-stats-dashboard__monthly .writer-stats-dashboard__trend,
+.writer-stats-dashboard__monthly .writer-stats-dashboard__trend-panel {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.writer-stats-dashboard__monthly-dates {
+  margin-bottom: 12px;
+
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+
+  overflow-wrap: anywhere;
+}
+
+/* 空数据状态 */
+
+.writer-stats-dashboard__monthly-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 110px;
+  margin-top: 14px;
+  padding: 18px;
+
+  background: var(--background-secondary);
+
+  border: 1px solid var(--background-modifier-border);
+
+  border-radius: 12px;
+
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* 复用现有 Dashboard Container Query */
+
+@container (max-width: 430px) {
+  .writer-stats-dashboard__monthly-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .writer-stats-dashboard__month-nav {
+    width: 100%;
+
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
+  }
+}
+
+/* Monthly Statstics - Responsive Grid */
+
+/* 宽Pane： 四项指标同一行 */
+.writer-stats-dashboard__monthly .writer-stats-dashboard__overview-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* 中等pane： 两列两行 */
+
+@container (max-width: 760px) {
+  .writer-stats-dashboard__monthly .writer-stats-dashboard__overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 窄Pane： 单列，保证内容可读 */
+
+@container (max-width: 430px) {
+  .writer-stats-dashboard__monthly .writer-stats-dashboard__overview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+
+/* ==========================================
+   Monthly Statistics — Smooth Update
+   快速切换月份时保留内容，避免闪烁
+   ========================================== */
+
+.writer-stats-dashboard__monthly-content.is-updating {
+  position: relative;
+}
+
+/* 旧月份数据暂时保留，但降低视觉权重 */
+.writer-stats-dashboard__monthly-content.is-updating>* {
+  opacity: 0.6;
+}
+
+/* 明确提示数据正在切换，避免误认旧数据 */
+.writer-stats-dashboard__monthly-content.is-updating::after {
+  content: "正在更新月份…";
+
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+
+  padding: 5px 9px;
+
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+
+  background: var(--background-primary);
+  color: var(--text-muted);
+
+  font-size: var(--font-ui-smaller);
+  pointer-events: none;
+}
+
+/* 月度图表不执行重新挂载时的高度过渡 */
+.writer-stats-dashboard__monthly .writer-stats-dashboard__trend-bar {
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+
+/* ====================================================
+   Writer Stats — Monthly File Ranking
+   仅作用于月度文件排行榜，不影响历史统计/目标
+   ==================================================== */
+
+.writer-stats-dashboard__ranking-host,
+.writer-stats-dashboard__ranking {
+  width: 100%;
+  min-width: 0;
+}
+
+.writer-stats-dashboard__ranking {
+  margin-top: 28px;
+}
+
+.writer-stats-dashboard__ranking-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.writer-stats-dashboard__ranking-header .writer-stats-dashboard__section-title {
+  margin: 0;
+}
+
+.writer-stats-dashboard__ranking-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+}
+
+/* .writer-stats-dashboard__ranking-filters
+button.writer-stats-dashboard__ranking-sort {
+  appearance: none;
+  min-height: 34px;
+  padding: 6px 11px;
+  margin: 0;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  background: var(--background-secondary) !important;
+  color: var(--text-normal) !important;
+  box-shadow: none !important;
+  font-size: var(--font-ui-small);
+  cursor: pointer;
+} */
+
+/* .writer-stats-dashboard__ranking-filters
+button.writer-stats-dashboard__ranking-sort:not(.is-active):hover {
+  background: var(--background-modifier-hover) !important;
+}
+
+.writer-stats-dashboard__ranking-filters
+button.writer-stats-dashboard__ranking-sort.is-active,
+.writer-stats-dashboard__ranking-filters
+button.writer-stats-dashboard__ranking-sort[aria-pressed="true"] {
+  background: var(--interactive-accent) !important;
+  color: var(--text-on-accent) !important;
+  font-weight: 600;
+}
+
+.writer-stats-dashboard__ranking-filters
+button.writer-stats-dashboard__ranking-sort:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+} */
+
+
+/* ========================================
+   Ranking Sort Selector
+   明确区分选中状态和键盘焦点
+   ======================================== */
+
+/* 普通状态 */
+.writer-stats-dashboard .writer-stats-dashboard__ranking-filters button.writer-stats-dashboard__ranking-sort {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 34px;
+  margin: 0;
+  padding: 6px 11px;
+
+  border: 1px solid var(--background-modifier-border) !important;
+  border-radius: 7px;
+
+  background-color: var(--background-secondary) !important;
+  background-image: none !important;
+  color: var(--text-normal) !important;
+
+  box-shadow: none !important;
+
+  font-size: var(--font-ui-small);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* 未选中按钮悬停 */
+.writer-stats-dashboard .writer-stats-dashboard__ranking-filters button.writer-stats-dashboard__ranking-sort:not([aria-pressed="true"]):hover {
+  background-color: var(--background-modifier-hover) !important;
+}
+
+/* 选中状态 */
+.writer-stats-dashboard .writer-stats-dashboard__ranking-filters button.writer-stats-dashboard__ranking-sort.is-active,
+
+.writer-stats-dashboard .writer-stats-dashboard__ranking-filters button.writer-stats-dashboard__ranking-sort[aria-pressed="true"] {
+  background-color: var(--interactive-accent) !important;
+  background-image: none !important;
+
+  border-color: var(--interactive-accent) !important;
+
+  color: var(--text-on-accent) !important;
+  font-weight: 600;
+  opacity: 1;
+}
+
+/* 鼠标焦点不额外产生选中边框 */
+.writer-stats-dashboard .writer-stats-dashboard__ranking-filters button.writer-stats-dashboard__ranking-sort:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 键盘焦点仍保留清晰的可访问性提示 */
+.writer-stats-dashboard .writer-stats-dashboard__ranking-filters button.writer-stats-dashboard__ranking-sort:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+
+.writer-stats-dashboard__ranking-caption {
+  margin-bottom: 14px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  overflow-wrap: anywhere;
+}
+
+.writer-stats-dashboard__ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+
+.writer-stats-dashboard__ranking-row {
+  display: grid;
+
+  grid-template-columns:
+    28px minmax(0, 1fr) max-content;
+
+  grid-template-areas:
+    "rank info values"
+    ". track track";
+
+  align-items: center;
+
+  column-gap: 14px;
+  row-gap: 9px;
+
+  min-width: 0;
+  padding: 12px 16px;
+
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 12px;
+  background: var(--background-secondary);
+}
+
+.writer-stats-dashboard__ranking-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  grid-area: rank;
+}
+
+.writer-stats-dashboard__ranking-info {
+  min-width: 0;
+  grid-area: info;
+}
+
+.writer-stats-dashboard__ranking-info button.writer-stats-dashboard__ranking-file {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--text-normal) !important;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.writer-stats-dashboard__ranking-info button.writer-stats-dashboard__ranking-file:hover {
+  color: var(--text-accent) !important;
+  text-decoration: underline;
+}
+
+.writer-stats-dashboard__ranking-file.is-missing {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.writer-stats-dashboard__ranking-path {
+  margin-top: 5px;
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  overflow-wrap: anywhere;
+}
+
+.writer-stats-dashboard__ranking-values {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 12px;
+  flex-wrap: wrap;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  font-variant-numeric: tabular-nums;
+  grid-area: values;
+  min-width: 0;
+}
+
+.writer-stats-dashboard__ranking-track {
+  grid-area: track;
+  min-width: 0;
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--background-modifier-border);
+}
+
+.writer-stats-dashboard__ranking-bar {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--interactive-accent);
+  opacity: 0.75;
+}
+
+.writer-stats-dashboard__ranking-bar.is-negative {
+  background: var(--text-muted);
+  opacity: 0.6;
+}
+
+.writer-stats-dashboard__ranking-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 20px;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 12px;
+  background: var(--background-secondary);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+
+@container (max-width: 600px) {
+
+  .writer-stats-dashboard__ranking-row {
+    grid-template-columns:
+      28px minmax(0, 1fr);
+
+    grid-template-areas:
+      "rank info"
+      ". values"
+      ". track";
+
+    column-gap: 10px;
+  }
+
+  .writer-stats-dashboard__ranking-values {
+    justify-content: flex-start;
+  }
+}
+
+
+@container (max-width: 430px) {
+  .writer-stats-dashboard__ranking-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .writer-stats-dashboard__ranking-filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .writer-stats-dashboard__ranking-filters button.writer-stats-dashboard__ranking-sort {
+    min-width: 0;
+    padding: 6px 3px;
+  }
+
+  .writer-stats-dashboard__ranking-row {
+    padding: 12px;
+    column-gap: 9px;
+  }
+
+  .writer-stats-dashboard__ranking-values {
+    justify-content: flex-start;
+    gap: 5px 10px;
+    font-size: var(--font-ui-smaller);
+  }
+}

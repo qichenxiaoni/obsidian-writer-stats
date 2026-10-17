@@ -71,7 +71,7 @@ export class MemoryStatsRepository implements StatsRepository {
 
             const renameActivity = {
                 ...activity,
-                filepath: newPath
+                filePath: newPath
             };
 
             this.activities.set(
