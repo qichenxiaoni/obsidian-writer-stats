@@ -15,6 +15,7 @@ import { GoalService } from "./core/GoalService";
 import { DailyOverviewService } from "./core/DailyOverviewService";
 import { DailyHistoryService } from "./core/DailyHistoryService";
 import { FileRankingService } from "./core/FileRankingService";
+import { FileWritingDetailService } from "./core/FileWritingDetailService";
 import { WRITER_STATS_VIEW_TYPE,WriterStatsView } from "./ui/WriterStatsView";
 
 export default class WordCountPlugin extends Plugin {
@@ -23,7 +24,8 @@ export default class WordCountPlugin extends Plugin {
     private repository!: StatsRepository;
     private vaultEvents!: VaultEventController;
     private dailyStatsService!: DailyStatsService;
-    private fileRankingServce!: FileRankingService;
+    private fileRankingService!: FileRankingService;
+    private fileWritingDetailService!: FileWritingDetailService;
     private statusBar!: StatusBarController;
     private settingsService!: PluginSettingsService;
     private goalService!: GoalService;
@@ -51,7 +53,8 @@ export default class WordCountPlugin extends Plugin {
                 this.goalService
             );
         this.dailyHistoryService = new DailyHistoryService(this.repository);
-        this.fileRankingServce = new FileRankingService(this.repository);
+        this.fileRankingService = new FileRankingService(this.repository);
+        this.fileWritingDetailService = new FileWritingDetailService(this.repository);
         this.statusBar = new StatusBarController(this,this.dailyOverviewService, () => {
             new StatisticsModal(
                 this.app,
@@ -91,7 +94,8 @@ export default class WordCountPlugin extends Plugin {
                     leaf,
                     this.dailyOverviewService,
                     this.dailyHistoryService,
-                    this.fileRankingServce
+                    this.fileRankingService,
+                    this.fileWritingDetailService
                 )
         );
 

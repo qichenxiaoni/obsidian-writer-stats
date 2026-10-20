@@ -26,7 +26,8 @@ export function renderFileRankingSection(
     app: App,
     summary: FileRankingSummary,
     initialSort: FileRankingSort,
-    onSortChange: (sort: FileRankingSort) => void
+    onSortChange: (sort: FileRankingSort) => void,
+    onViewDetails: (filePath: string) => void
 ): void {
     const section = parent.createDiv({
         cls:
@@ -46,7 +47,7 @@ export function renderFileRankingSection(
 
     const controls = header.createDiv({
         cls:
-            "writer-stats-dasboard__ranking-filters"
+            "writer-stats-dashboard__ranking-filters"
     });
 
     const buttons = new Map<FileRankingSort, HTMLButtonElement>();
@@ -109,26 +110,56 @@ export function renderFileRankingSection(
             const fileName = entry.filePath.split("/").pop() || entry.filePath;
             const abstractFile = app.vault.getAbstractFileByPath(entry.filePath);
 
+            const fileLine = detail.createDiv({
+                cls:
+                    "writer-stats-dashboard__ranking-file-line"
+            });
+
             if (abstractFile instanceof TFile) {
-                const link = detail.createEl("button",{
+                const link = fileLine.createEl("button",{
                     cls:
                         "writer-stats-dashboard__ranking-file",
                     text: fileName
                 });
+
                 link.type = "button";
                 link.title = `打开 ${entry.filePath}`;
+
                 link.addEventListener("click", () => {
-                    void app.workspace.getLeaf("tab").openFile(abstractFile);
+                    void app.workspace
+                        .getLeaf("tab")
+                        .openFile(abstractFile);
                 });
-            }else {
-                const label = detail.createSpan({
+            } else {
+                const label = fileLine.createSpan({
                     cls:
-                        "writer-stats-dashboard__ranking-file is-missing",
+                        "writer-stats-dashboard__ranking-file",
                     text: fileName
                 });
 
                 label.title = "文件已删除或不在当前仓库中";
             }
+
+            // 与打开文件分开： 查看详情不需要文件仍存在
+            const detailsButton = fileLine.createEl(
+                "button",
+                {
+                    cls:
+                        "writer-stats-dashboard__ranking-details-button",
+                    text: "查看详情"
+                }
+            );
+
+            detailsButton.type = "button";
+
+            detailsButton.setAttribute(
+                "aria-label",
+                `查看 ${entry.filePath} 的写作详情`
+            );
+
+            detailsButton.addEventListener("click", () => {
+                onViewDetails(entry.filePath);
+            });
 
             detail.createDiv({
                 cls:

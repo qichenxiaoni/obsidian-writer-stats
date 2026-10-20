@@ -2408,3 +2408,223 @@ button.writer-stats-dashboard__ranking-sort:focus-visible {
     font-size: var(--font-ui-smaller);
   }
 }
+
+/* Writer Stats - Single-file Detail 单文件写作详情 */
+
+/* 排行榜文件名与详情按钮 */
+
+.writer-stats-dashboard__ranking-file-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.writer-stats-dashboard__ranking-file-line
+> .writer-stats-dashboard__ranking-file {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.writer-stats-dashboard__ranking-file-line
+button.writer-stats-dashboard__ranking-details-button {
+  appearance: none;
+  flex: 0 0 auto;
+
+  min-height: 27px;
+  margin: 0;
+  padding: 3px 8px;
+
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+
+  background: var(--background-primary);
+  color: var(--text-muted);
+  box-shadow: none;
+
+  font-size: var(--font-ui-smaller);
+  cursor: pointer;
+}
+
+.writer-stats-dashboard__ranking-file-line
+button.writer-stats-dashboard__ranking-details-button:hover {
+  color: var(--text-accent);
+  background: var(--background-modifier-hover);
+}
+
+.writer-stats-dashboard__ranking-file-line
+button.writer-stats-dashboard__ranking-details-button:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+/* obsidian 原生 Modal */
+
+.writer-stats-file-detail-modal .modal {
+  width: min(740px, calc(100vw - 24px));
+  max-width: 100%;
+}
+
+.writer-stats-file-detail-modal
+.modal-content {
+  min-width: 0;
+}
+
+/* 文件信息 */
+
+.writer-stats-file-detail__header {
+  margin-bottom: 18px;
+}
+
+.writer-stats-file-detail__header h3 {
+  margin: 0 0 6px;
+  font-size: 1.2em;
+  overflow-wrap: anywhere;
+}
+
+.writer-stats-file-detail__path,
+.writer-stats-file-detail__dates,
+.writer-stats-file-detail__missing {
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  overflow-wrap: anywhere;
+}
+
+.writer-stats-file-detail__missing {
+  color: var(--text-warning);
+}
+
+/* 四项统计 */
+
+.writer-stats-file-detail__metrics {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.writer-stats-file-detail__metric {
+  min-width: 0;
+  padding: 12px;
+
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+
+  background: var(--background-secondary);
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.writer-stats-file-detail__metric strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-normal);
+  font-size: 1.25em;
+  font-variant-numeric: tabular-nums;
+}
+
+.writer-stats-file-detail-modal h4 {
+  margin: 18px 0 10px;
+}
+
+/* 每日趋势 */
+
+.writer-stats-file-detail__plot {
+  display: grid;
+  grid-template-columns: repeat(var(--file-detail-columns),minmax(0,1fr));
+
+  align-items: end;
+  gap: 3px;
+  
+  height: 165px;
+  padding: 12px;
+
+  border-radius: 12px;
+  background: var(--background-secondary);
+}
+
+.writer-stats-file-detail__column {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  height: 100%;
+  min-width: 0;
+}
+
+.writer-stats-file-detail__bar {
+  width: 72%;
+  max-width: 20px;
+  min-width: 2px;
+
+  border-radius: 4px 4px 1px 1px;
+  background: var(--interactive-accent);
+  opacity: 0.75;
+}
+
+.writer-stats-file-detail__bar.is-empty {
+  background: var(--background-modifier-border);
+}
+
+.writer-stats-file-detail__bar.is-best {
+  opacity: 1;
+  box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+.writer-stats-file-detail__best {
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+/* 日期明细表 */
+
+.writer-stats-file-detail__table-wrap {
+  overflow-y: auto;
+}
+
+.writer-stats-file-detail__table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.writer-stats-file-detail__table th,
+.writer-stats-file-detail__table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  text-align: right;
+}
+
+.writer-stats-file-detail__table th:first-child,
+.writer-stats-file-detail__table td:first-child {
+  text-align: left;
+}
+
+/* 无记录状态 */
+
+.writer-stats-file-detail__empty {
+  padding: 28px 12px;
+  border-radius: 10px;
+
+  text-align: center;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+}
+
+/* 小屏幕弹窗 */
+
+@media (max-width: 560px) {
+  .writer-stats-file-detail__metrics {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+
+  .writer-stats-file-detail__plot {
+    height: 130px;
+    padding: 8px;
+    gap: 2px;
+  }
+}

@@ -41,6 +41,14 @@ import {
     renderFileRankingSection
 } from "./FileRankingSection";
 
+import type {
+    FileWritingDetailService
+} from "../core/FileWritingDetailService";
+
+import {
+    FileWritingDetailModal
+} from "./FileWritingDetailModal";
+
 
 export const WRITER_STATS_VIEW_TYPE =
     "writer-stats-dashboard";
@@ -75,7 +83,10 @@ export class WriterStatsView
             DailyHistoryService,
 
         private readonly fileRankingService:
-            FileRankingService
+            FileRankingService,
+        
+        private readonly fileWritingDetailService:
+            FileWritingDetailService
     ) {
         super(leaf);
     }
@@ -1167,6 +1178,15 @@ export class WriterStatsView
                 this.fileRankingSort,
                 sort => {
                     this.fileRankingSort = sort;
+                },
+                filePath => {
+                    new FileWritingDetailModal(
+                        this.app,
+                        this.fileWritingDetailService,
+                        filePath,
+                        ranking.startDate,
+                        ranking.endDate
+                    ).open();
                 }
             );
         }).catch(error => {
