@@ -956,14 +956,14 @@
 }
 
 .writer-stats-modal__heatmap-cell.level-1,
-.writer-stats-modal__heatmao-legend-cell.level-1 {
+.writer-stats-modal__heatmap-legend-cell.level-1 {
   background: var(--interactive-accent);
 
   opacity: 0.4;
 }
 
 .writer-stats-modal__heatmap-cell.level-2,
-.writer-stats-modal__heatmao-legend-cell.level-2 {
+.writer-stats-modal__heatmap-legend-cell.level-2 {
   background: var(--interactive-accent);
 
   opacity: 0.6;
@@ -2421,14 +2421,12 @@ button.writer-stats-dashboard__ranking-sort:focus-visible {
   min-width: 0;
 }
 
-.writer-stats-dashboard__ranking-file-line
-> .writer-stats-dashboard__ranking-file {
+.writer-stats-dashboard__ranking-file-line>.writer-stats-dashboard__ranking-file {
   min-width: 0;
   max-width: 100%;
 }
 
-.writer-stats-dashboard__ranking-file-line
-button.writer-stats-dashboard__ranking-details-button {
+.writer-stats-dashboard__ranking-file-line button.writer-stats-dashboard__ranking-details-button {
   appearance: none;
   flex: 0 0 auto;
 
@@ -2447,14 +2445,12 @@ button.writer-stats-dashboard__ranking-details-button {
   cursor: pointer;
 }
 
-.writer-stats-dashboard__ranking-file-line
-button.writer-stats-dashboard__ranking-details-button:hover {
+.writer-stats-dashboard__ranking-file-line button.writer-stats-dashboard__ranking-details-button:hover {
   color: var(--text-accent);
   background: var(--background-modifier-hover);
 }
 
-.writer-stats-dashboard__ranking-file-line
-button.writer-stats-dashboard__ranking-details-button:focus-visible {
+.writer-stats-dashboard__ranking-file-line button.writer-stats-dashboard__ranking-details-button:focus-visible {
   outline: 2px solid var(--interactive-accent);
   outline-offset: 2px;
 }
@@ -2466,8 +2462,7 @@ button.writer-stats-dashboard__ranking-details-button:focus-visible {
   max-width: 100%;
 }
 
-.writer-stats-file-detail-modal
-.modal-content {
+.writer-stats-file-detail-modal .modal-content {
   min-width: 0;
 }
 
@@ -2500,7 +2495,7 @@ button.writer-stats-dashboard__ranking-details-button:focus-visible {
 
 .writer-stats-file-detail__metrics {
   display: grid;
-  grid-template-columns: repeat(4,minmax(0,1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 22px;
 }
@@ -2533,11 +2528,11 @@ button.writer-stats-dashboard__ranking-details-button:focus-visible {
 
 .writer-stats-file-detail__plot {
   display: grid;
-  grid-template-columns: repeat(var(--file-detail-columns),minmax(0,1fr));
+  grid-template-columns: repeat(var(--file-detail-columns), minmax(0, 1fr));
 
   align-items: end;
   gap: 3px;
-  
+
   height: 165px;
   padding: 12px;
 
@@ -2619,12 +2614,261 @@ button.writer-stats-dashboard__ranking-details-button:focus-visible {
 
 @media (max-width: 560px) {
   .writer-stats-file-detail__metrics {
-    grid-template-columns: repeat(2,minmax(0,1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .writer-stats-file-detail__plot {
     height: 130px;
     padding: 8px;
     gap: 2px;
+  }
+}
+
+/* Writer Stats - Dashboard Annual Heatmap
+重复统计弹窗中的公共热力图组件 */
+
+.writer-stats-dashboard__annual {
+  margin-top: 28px;
+  margin-bottom: 28px;
+  min-width: 0;
+}
+
+/* 标题和年份导航 */
+
+.writer-stats-dashboard__annual-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.writer-stats-dashboard__annual-header .writer-stats-dashboard__section-title {
+  margin: 0;
+}
+
+.writer-stats-dashboard__annual-nav {
+  display: grid;
+  grid-template-columns: 36px minmax(90px, auto) 36px;
+  align-items: center;
+  gap: 8px;
+}
+
+.writer-stats-dashboard__annual-nav button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+
+  background: var(--background-secondary);
+  color: var(--text-normal);
+}
+
+.writer-stats-dashboard__annual-nav button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.writer-stats-dashboard__annual-year {
+  text-align: center;
+  white-space: nowrap;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 热力图宽度保护：
+   在窄 Pane 中允许热力图区域单独横向滚动，
+   不让整个 Dashboard 出现横向滚动条。 */
+
+.writer-stats-dashboard__annual-viewport {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.writer-stats-dashboard__annual-viewport>.writer-stats-modal__heatmap {
+  min-width: 630px;
+}
+
+
+/* ==============================================
+   Writer Stats — Annual Heatmap Full Width
+   年度热力图与 Dashboard 其他模块等宽
+   ============================================== */
+
+/*
+ * 只修改 Dashboard 中的年度热力图。
+ * 不影响 StatisticsModal 原有的热力图布局。
+ */
+
+/* 1. 热力图可用宽度 */
+
+.writer-stats-dashboard__annual-viewport {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.writer-stats-dashboard__annual-viewport
+> .writer-stats-modal__heatmap {
+    width: 100%;
+    max-width: none;
+    min-width: 780px;
+
+    box-sizing: border-box;
+    overflow: visible;
+}
+
+/* 2. 月份标签使用与日期网格相同的周列 */
+
+.writer-stats-dashboard__annual
+.writer-stats-modal__heatmap-months {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            var(--writer-stats-heatmap-weeks),
+            minmax(0, 1fr)
+        );
+
+    grid-auto-columns: auto;
+    column-gap: 3px;
+
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+
+    padding-left: 22px;
+    box-sizing: border-box;
+
+    overflow: visible;
+}
+
+.writer-stats-dashboard__annual
+.writer-stats-modal__heatmap-month {
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+/* 3. 左侧星期与右侧日期网格 */
+
+.writer-stats-dashboard__annual
+.writer-stats-modal__heatmap-body {
+    display: grid;
+
+    grid-template-columns:
+        17px minmax(0, 1fr);
+
+    column-gap: 5px;
+
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+
+    overflow: visible;
+}
+
+/* 4. 星期标签：七行 */
+
+.writer-stats-dashboard__annual
+.writer-stats-modal__heatmap-weekdays {
+    display: grid;
+
+    grid-template-rows:
+        repeat(7, 17px);
+
+    row-gap: 3px;
+
+    width: 17px;
+    overflow: visible;
+}
+
+.writer-stats-dashboard__annual
+.writer-stats-modal__heatmap-weekday {
+    height: 17px;
+
+    font-size: 10px;
+    line-height: 17px;
+
+    text-align: right;
+}
+
+/* 5. 全部周列均匀分布，占满可用宽度 */
+
+.writer-stats-dashboard__annual
+.writer-stats-modal__heatmap-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            var(--writer-stats-heatmap-weeks),
+            minmax(0, 1fr)
+        );
+
+    grid-template-rows:
+        repeat(7, 17px);
+
+    grid-auto-columns: auto;
+
+    column-gap: 3px;
+    row-gap: 3px;
+
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+
+    overflow: visible;
+}
+
+/* 6. 日期格子保持正方形 */
+
+.writer-stats-dashboard__annual
+.writer-stats-modal__heatmap-cell {
+    width: 100%;
+    max-width: 16px;
+    min-width: 0;
+
+    height: auto;
+    min-height: 0;
+
+    aspect-ratio: 1 / 1;
+
+    justify-self: center;
+    align-self: center;
+
+    border-radius: 3px;
+}
+
+/* 7. 颜色图例统一尺寸 */
+
+.writer-stats-dashboard__annual
+.writer-stats-modal__heatmap-legend-cell {
+    display: inline-block;
+
+    flex: 0 0 12px;
+
+    width: 12px;
+    height: 12px;
+
+    border-radius: 3px;
+}
+
+
+/* 窄 Pane 下年份导航独占一行 */
+
+@container (max-width: 430px) {
+  .writer-stats-dashboard__annual-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .writer-stats-dashboard__annual-nav {
+    width: 100%;
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
   }
 }
