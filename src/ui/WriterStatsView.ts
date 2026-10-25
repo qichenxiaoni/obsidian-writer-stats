@@ -1,6 +1,7 @@
 import {
     ItemView,
-    WorkspaceLeaf
+    WorkspaceLeaf,
+    Notice
 } from "obsidian";
 
 import type {
@@ -53,6 +54,14 @@ import {
     renderYearHeatmapSection
 } from "./YearHeatmapSection";
 
+import type {
+    MonthlyCsvExportService
+} from "../core/MonthlyCsvExportService";
+
+import {
+    saveMonthlyCsvToVault
+} from "./CsvVaultExporter";
+
 
 export const WRITER_STATS_VIEW_TYPE =
     "writer-stats-dashboard";
@@ -96,7 +105,10 @@ export class WriterStatsView
             FileRankingService,
         
         private readonly fileWritingDetailService:
-            FileWritingDetailService
+            FileWritingDetailService,
+        
+        private readonly monthlyCsvExportService:
+            MonthlyCsvExportService
     ) {
         super(leaf);
     }
@@ -1089,6 +1101,73 @@ export class WriterStatsView
             "aria-label",
             "下一个月"
         );
+
+        // 月度 CSV 导出工具栏
+        const exportToolbar = section.createDiv({
+            cls:
+                "writer-stats-dashboard__monthly-export-toolbar"
+        });
+
+        const exportButton = exportToolbar.createEl(
+            "button",
+            {
+                cls:
+                    "writer-stats-dashboard__monthly-export-button",
+                text: "导出当前月份 CSV"
+            }
+        );
+
+        exportButton.type = "button";
+        exportButton.title =
+            "在 Vault 的 Writer Stats Exports 文件夹中" +
+            "生成每日汇总与文件明细";
+
+        // 点击导出当前选择的自然月
+        exportButton.addEventListener("click",() => {
+            // 立即保存月份，避免用户切换月份时混淆
+            const requestedMonth = month;
+
+            // 防止连续点击创建重复导出任务
+            exportButton.disabled = true;
+            exportButton.setText("正在导出....");
+
+            void (async () => {
+                try {
+                    // 生成两份 CSV 内容
+                    const bundle = 
+                        await this.monthlyCsvExportService
+                            .buildMonthlyCsv(
+                                requestedMonth,
+                                today
+                            );
+
+                    // 保存到当前 Obsidian Vault
+                    await saveMonthlyCsvToVault(
+                        this.app,
+                        bundle
+                    );
+
+                    new Notice(
+                        `已导出 ${requestedMonth} 的两份 CSV` +
+                        `Writer Stats Exports`
+                    );
+                } catch(error) {
+                    console.error(
+                        "[Writer Stats] CSV 导出失败",
+                        error
+                    );
+
+                    new Notice(
+                        "CSV 导出失败，请查看开发者工具中的错误信息"
+                    );
+                } finally {
+                    exportButton.disabled = false;
+                    exportButton.setText(
+                        "导出当前月份 CSV"
+                    );
+                }
+            })();
+        });
 
         const content = section.createDiv({
             cls:

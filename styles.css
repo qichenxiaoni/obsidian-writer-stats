@@ -2858,7 +2858,6 @@ button.writer-stats-dashboard__ranking-sort:focus-visible {
     border-radius: 3px;
 }
 
-
 /* 窄 Pane 下年份导航独占一行 */
 
 @container (max-width: 430px) {
@@ -2871,4 +2870,49 @@ button.writer-stats-dashboard__ranking-sort:focus-visible {
     width: 100%;
     grid-template-columns: 36px minmax(0, 1fr) 36px;
   }
+}
+
+/* CSV */
+
+/* 导出工具栏 */
+.writer-stats-dashboard__monthly-export-toolbar {
+  display: flex;
+  justify-content: flex-end;
+
+  margin: 0 0 12px;
+  min-width: 0;
+}
+
+/* 导出按钮 */
+
+.writer-stats-dashboard__monthly-export-button {
+  min-width: 34px;
+  padding: 6px 12px;
+
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  
+  background: var(--background-secondary);
+  color: var(--text-normal);
+
+  cursor: pointer;
+}
+
+/* 悬停状态 */
+
+.writer-stats-dashboard__monthly-export-button:hover:not(:disabled) {
+  background: var(--background-modifier-hover);
+}
+
+/* 键盘聚焦 */
+
+.writer-stats-dashboard__monthly-export-button:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+/* 导出中： 禁止重复点击 */
+.writer-stats-dashboard__monthly-export-button:disabled {
+  opacity: 0.6;
+  cursor: progress;
 }
