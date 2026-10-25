@@ -121,6 +121,12 @@ export class MonthlyCsvExportService {
             const deleted = activity.deleted.total;
             const net = activity.net.total;
 
+            // 没有新增或删除的活动记录不属于有效写作活动
+            // 不计入活跃文件，也不生成 CSV 明细文件
+            if (added === 0 && deleted === 0) {
+                continue;
+            }
+
             // 每日汇总
             const day = daily.get(
                 activity.date

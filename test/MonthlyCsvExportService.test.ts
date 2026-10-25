@@ -256,4 +256,47 @@ describe("MonthlyCsvExportService", () => {
             )
         ).rejects.toThrow();
     });
+
+
+    test("零变化活动不计入活跃文件及逐文件明细", async () => {
+        const { service, save } = fixture();
+
+        // 无实际字数变化
+        await save(
+            "2026-10-02",
+            "status-bar-test-2.md",
+            0,
+            0
+        );
+
+        // 正常写作活动
+        await save(
+            "2026-10-07",
+            "status-bar-test-2.md",
+            32,
+            13
+        );
+
+        const result = await service.buildMonthlyCsv(
+            "2026-10",
+            "2026-10-25"
+        );
+
+        // 无变化日期仍存在，但活跃文件数为 0
+        expect(rows(result.dailyCsv)).toContain(
+            "2026-10-02,0,0,0,0"
+        );
+
+        // 正常写作活动仍然计入
+        expect(rows(result.dailyCsv)).toContain(
+            "2026-10-07,32,13,19,1"
+        );
+
+        // 文件明细只包含真实的增删活动
+        expect(rows(result.fileCsv)).toEqual([
+            "日期,文件路径,新增,删除,净增长",
+            "2026-10-07,status-bar-test-2.md,32,13,19"
+        ]);
+    });
+
 });
