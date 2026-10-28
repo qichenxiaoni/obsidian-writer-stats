@@ -20,7 +20,10 @@ export class WriterStatsSettingTab
             PluginSettingsService,
 
         private readonly onSettingsChanged?:
-            () => Promise<void> | void
+            () => Promise<void> | void,
+        
+        private readonly onOpenBackups?:
+            () => void
     ) {
         super(
             app,
@@ -48,6 +51,21 @@ export class WriterStatsSettingTab
             }
         );
 
+        new Setting(containerEl)
+            .setName(
+                "统计数据备份与恢复"
+            )
+            .setDesc(
+                "手动创建 JSON 备份：" +
+                "恢复前将自动保存现有数据。"
+            )
+            .addButton(button => {
+                button
+                    .setButtonText("打开备份管理").onClick(() => {
+                        this.onOpenBackups?.();
+                    });
+            });
+        
         const settings =
             await this.settingsService
                 .getSettings();

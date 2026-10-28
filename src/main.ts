@@ -2,6 +2,9 @@ import { Notice, Plugin } from "obsidian";
 import { ActivityTracker } from "./core/ActivityTracker";
 import { JsonStatsRepository } from "./persistence/JsonStatsRepository";
 import { ObsidianPluginDataStore } from "./persistence/ObsidianPluginDataStore";
+import { BackupGuardedDataStore } from "./persistence/BackupGuardedDataStore";
+import { BackupVaultService } from "./ui/BackupVaultService";
+import { WriterStatsBackupModal } from "./ui/WriterStatsBackupModal";
 import { TextAnalyzer } from "./core/TextAnalyzer";
 import { EditorEventController } from "./events/EditorEventController";
 import { VaultEventController } from "./events/VaultEventController";
@@ -17,9 +20,10 @@ import { DailyHistoryService } from "./core/DailyHistoryService";
 import { FileRankingService } from "./core/FileRankingService";
 import { FileWritingDetailService } from "./core/FileWritingDetailService";
 import { MonthlyCsvExportService } from "./core/MonthlyCsvExportService";
-import { WRITER_STATS_VIEW_TYPE,WriterStatsView } from "./ui/WriterStatsView";
+import { WRITER_STATS_VIEW_TYPE, WriterStatsView } from "./ui/WriterStatsView";
 
 export default class WordCountPlugin extends Plugin {
+    private backupVaultService!: BackupVaultService;
     private activityTracker!: ActivityTracker;
     private editorEvents!: EditorEventController;
     private repository!: StatsRepository;
@@ -37,9 +41,17 @@ export default class WordCountPlugin extends Plugin {
     async onload(): Promise<void> {
         console.log("Word Count Plugin v1 loaded");
 
-        const dataStore = new ObsidianPluginDataStore(this);
-        
-        this.settingsService = 
+        const dataStore = new BackupGuardedDataStore(
+            new ObsidianPluginDataStore(this)
+        );
+
+        this.backupVaultService =
+            new BackupVaultService(
+                this.app,
+                dataStore
+            );
+
+        this.settingsService =
             new PluginSettingsService(
                 dataStore
             );
@@ -58,7 +70,7 @@ export default class WordCountPlugin extends Plugin {
         this.fileRankingService = new FileRankingService(this.repository);
         this.fileWritingDetailService = new FileWritingDetailService(this.repository);
         this.monthlyCsvExportService = new MonthlyCsvExportService(this.repository);
-        this.statusBar = new StatusBarController(this,this.dailyOverviewService, () => {
+        this.statusBar = new StatusBarController(this, this.dailyOverviewService, () => {
             new StatisticsModal(
                 this.app,
                 this.dailyStatsService,
@@ -79,14 +91,14 @@ export default class WordCountPlugin extends Plugin {
             async date => {
                 await this.statusBar.refresh(
                     date
-                ); 
+                );
 
                 await this.refreshWriterStatsDashboard();
             }
         )
         this.editorEvents.start();
 
-        this.vaultEvents = new VaultEventController(this,this.repository);
+        this.vaultEvents = new VaultEventController(this, this.repository);
         this.vaultEvents.start();
 
         this.registerView(
@@ -160,6 +172,19 @@ export default class WordCountPlugin extends Plugin {
             }
         );
 
+        this.addCommand({
+            id: "open-writer-stats-backups",
+            name: "打开统计数据备份与恢复",
+
+            callback: () => {
+                new WriterStatsBackupModal(
+                    this.app,
+                    this.backupVaultService
+                ).open();
+            }
+        });
+
+
         this.addSettingTab(
             new WriterStatsSettingTab(
                 this.app,
@@ -170,9 +195,17 @@ export default class WordCountPlugin extends Plugin {
                     await this.statusBar.refresh();
 
                     await this.refreshWriterStatsDashboard();
+                },
+
+                () => {
+                    new WriterStatsBackupModal(
+                        this.app,
+                        this.backupVaultService
+                    ).open();
                 }
             )
         );
+
     }
 
     private async openWriterStatsDashboard(): Promise<void> {
@@ -182,57 +215,57 @@ export default class WordCountPlugin extends Plugin {
                     WRITER_STATS_VIEW_TYPE
                 );
 
-            if (
-                existingLeaves.length > 0
-            ) {
-                await this.app.workspace
-                    .revealLeaf(
-                        existingLeaves[0]
-                    );
-
-                return;
-            }
-
-            const leaf =
-                this.app.workspace
-                    .getLeaf(
-                        "tab"
-                    );
-
-            await leaf.setViewState({
-                type:
-                    WRITER_STATS_VIEW_TYPE,
-
-                active:
-                    true
-            });
-
+        if (
+            existingLeaves.length > 0
+        ) {
             await this.app.workspace
                 .revealLeaf(
-                    leaf
+                    existingLeaves[0]
                 );
+
+            return;
+        }
+
+        const leaf =
+            this.app.workspace
+                .getLeaf(
+                    "tab"
+                );
+
+        await leaf.setViewState({
+            type:
+                WRITER_STATS_VIEW_TYPE,
+
+            active:
+                true
+        });
+
+        await this.app.workspace
+            .revealLeaf(
+                leaf
+            );
     }
 
     private async refreshWriterStatsDashboard():
         Promise<void> {
-            const leaves =
-                this.app.workspace
-                    .getLeavesOfType(
-                        WRITER_STATS_VIEW_TYPE
-                    );
+        const leaves =
+            this.app.workspace
+                .getLeavesOfType(
+                    WRITER_STATS_VIEW_TYPE
+                );
 
-            for (const leaf of leaves) {
-                const view =
-                    leaf.view;
+        for (const leaf of leaves) {
+            const view =
+                leaf.view;
 
-                if (
-                    view instanceof
-                    WriterStatsView
-                ) {
-                    await view.refresh();
-                }
+            if (
+                view instanceof
+                WriterStatsView
+            ) {
+                await view.refresh();
             }
         }
+    }
 
     onunload(): void {
 

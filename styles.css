@@ -2916,3 +2916,31 @@ button.writer-stats-dashboard__ranking-sort:focus-visible {
   opacity: 0.6;
   cursor: progress;
 }
+
+/* Writer Stats - Backup & Restore Modal */
+
+.writer-stats-backup-modal .modal {
+  width: min(640px, calc(100vw - 24px));
+}
+
+.writer-stats-backup-modal .modal-content {
+  min-width: 0;
+}
+
+.writer-stats-backup-modal select,
+.writer-stats-backup-modal input[type="text"] {
+  display: block;
+
+  width: 100%;
+  max-width: 100%;
+
+  margin: 10px 0;
+}
+
+.writer-stats-backup-modal button {
+  margin: 6px 8px 6px 0;
+}
+
+.writer-stats-backup-modal p {
+  overflow-wrap: anywhere;
+}
