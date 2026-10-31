@@ -748,6 +748,31 @@
   text-align: right;
 }
 
+
+/* ========================================
+   Trend Date Alignment Fix
+   ======================================== */
+
+/* 提高日期文字可读性 */
+.writer-stats-dashboard__trend-axis-label {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 7 日图：全部日期和柱状图中心对齐 */
+.writer-stats-dashboard__trend-axis.is-short .writer-stats-dashboard__trend-axis-label {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* 覆盖原本对首尾日期的左右偏移 */
+.writer-stats-dashboard__trend-axis.is-short .writer-stats-dashboard__trend-axis-label.is-first,
+.writer-stats-dashboard__trend-axis.is-short .writer-stats-dashboard__trend-axis-label.is-last {
+  text-align: center;
+}
+
+
 /* Writer Stats - Year Heatmap */
 
 .writer-stats-modal__heatmap {
@@ -2706,156 +2731,143 @@ button.writer-stats-dashboard__ranking-sort:focus-visible {
 /* 1. 热力图可用宽度 */
 
 .writer-stats-dashboard__annual-viewport {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 
-    overflow-x: auto;
-    overflow-y: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
-.writer-stats-dashboard__annual-viewport
-> .writer-stats-modal__heatmap {
-    width: 100%;
-    max-width: none;
-    min-width: 780px;
+.writer-stats-dashboard__annual-viewport>.writer-stats-modal__heatmap {
+  width: 100%;
+  max-width: none;
+  min-width: 780px;
 
-    box-sizing: border-box;
-    overflow: visible;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 /* 2. 月份标签使用与日期网格相同的周列 */
 
-.writer-stats-dashboard__annual
-.writer-stats-modal__heatmap-months {
-    display: grid;
+.writer-stats-dashboard__annual .writer-stats-modal__heatmap-months {
+  display: grid;
 
-    grid-template-columns:
-        repeat(
-            var(--writer-stats-heatmap-weeks),
-            minmax(0, 1fr)
-        );
+  grid-template-columns:
+    repeat(var(--writer-stats-heatmap-weeks),
+      minmax(0, 1fr));
 
-    grid-auto-columns: auto;
-    column-gap: 3px;
+  grid-auto-columns: auto;
+  column-gap: 3px;
 
-    width: 100%;
-    max-width: none;
-    min-width: 0;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
 
-    padding-left: 22px;
-    box-sizing: border-box;
+  padding-left: 22px;
+  box-sizing: border-box;
 
-    overflow: visible;
+  overflow: visible;
 }
 
-.writer-stats-dashboard__annual
-.writer-stats-modal__heatmap-month {
-    font-size: 10px;
-    line-height: 1.4;
+.writer-stats-dashboard__annual .writer-stats-modal__heatmap-month {
+  font-size: 10px;
+  line-height: 1.4;
 }
 
 /* 3. 左侧星期与右侧日期网格 */
 
-.writer-stats-dashboard__annual
-.writer-stats-modal__heatmap-body {
-    display: grid;
+.writer-stats-dashboard__annual .writer-stats-modal__heatmap-body {
+  display: grid;
 
-    grid-template-columns:
-        17px minmax(0, 1fr);
+  grid-template-columns:
+    17px minmax(0, 1fr);
 
-    column-gap: 5px;
+  column-gap: 5px;
 
-    width: 100%;
-    max-width: none;
-    min-width: 0;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
 
-    overflow: visible;
+  overflow: visible;
 }
 
 /* 4. 星期标签：七行 */
 
-.writer-stats-dashboard__annual
-.writer-stats-modal__heatmap-weekdays {
-    display: grid;
+.writer-stats-dashboard__annual .writer-stats-modal__heatmap-weekdays {
+  display: grid;
 
-    grid-template-rows:
-        repeat(7, 17px);
+  grid-template-rows:
+    repeat(7, 17px);
 
-    row-gap: 3px;
+  row-gap: 3px;
 
-    width: 17px;
-    overflow: visible;
+  width: 17px;
+  overflow: visible;
 }
 
-.writer-stats-dashboard__annual
-.writer-stats-modal__heatmap-weekday {
-    height: 17px;
+.writer-stats-dashboard__annual .writer-stats-modal__heatmap-weekday {
+  height: 17px;
 
-    font-size: 10px;
-    line-height: 17px;
+  font-size: 10px;
+  line-height: 17px;
 
-    text-align: right;
+  text-align: right;
 }
 
 /* 5. 全部周列均匀分布，占满可用宽度 */
 
-.writer-stats-dashboard__annual
-.writer-stats-modal__heatmap-grid {
-    display: grid;
+.writer-stats-dashboard__annual .writer-stats-modal__heatmap-grid {
+  display: grid;
 
-    grid-template-columns:
-        repeat(
-            var(--writer-stats-heatmap-weeks),
-            minmax(0, 1fr)
-        );
+  grid-template-columns:
+    repeat(var(--writer-stats-heatmap-weeks),
+      minmax(0, 1fr));
 
-    grid-template-rows:
-        repeat(7, 17px);
+  grid-template-rows:
+    repeat(7, 17px);
 
-    grid-auto-columns: auto;
+  grid-auto-columns: auto;
 
-    column-gap: 3px;
-    row-gap: 3px;
+  column-gap: 3px;
+  row-gap: 3px;
 
-    width: 100%;
-    max-width: none;
-    min-width: 0;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
 
-    overflow: visible;
+  overflow: visible;
 }
 
 /* 6. 日期格子保持正方形 */
 
-.writer-stats-dashboard__annual
-.writer-stats-modal__heatmap-cell {
-    width: 100%;
-    max-width: 16px;
-    min-width: 0;
+.writer-stats-dashboard__annual .writer-stats-modal__heatmap-cell {
+  width: 100%;
+  max-width: 16px;
+  min-width: 0;
 
-    height: auto;
-    min-height: 0;
+  height: auto;
+  min-height: 0;
 
-    aspect-ratio: 1 / 1;
+  aspect-ratio: 1 / 1;
 
-    justify-self: center;
-    align-self: center;
+  justify-self: center;
+  align-self: center;
 
-    border-radius: 3px;
+  border-radius: 3px;
 }
 
 /* 7. 颜色图例统一尺寸 */
 
-.writer-stats-dashboard__annual
-.writer-stats-modal__heatmap-legend-cell {
-    display: inline-block;
+.writer-stats-dashboard__annual .writer-stats-modal__heatmap-legend-cell {
+  display: inline-block;
 
-    flex: 0 0 12px;
+  flex: 0 0 12px;
 
-    width: 12px;
-    height: 12px;
+  width: 12px;
+  height: 12px;
 
-    border-radius: 3px;
+  border-radius: 3px;
 }
 
 /* 窄 Pane 下年份导航独占一行 */
@@ -2891,7 +2903,7 @@ button.writer-stats-dashboard__ranking-sort:focus-visible {
 
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
-  
+
   background: var(--background-secondary);
   color: var(--text-normal);
 
@@ -2943,4 +2955,274 @@ button.writer-stats-dashboard__ranking-sort:focus-visible {
 
 .writer-stats-backup-modal p {
   overflow-wrap: anywhere;
+}
+
+/* Writer Stats - Folder Writing Statistics */
+
+.writer-stats-dashboard__folders {
+  margin-top: 28px;
+  min-width: 0;
+}
+
+/* 标题和排序按钮 */
+
+.writer-stats-dashboard__folders-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.writer-stats-dashboard__folders-header .writer-stats-dashboard__section-title {
+  margin: 0;
+}
+
+.writer-stats-dashboard__folders-sort {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.writer-stats-dashboard__folders-sort button.writer-stats-dashboard__folders-sort-button {
+  min-height: 32px;
+  padding: 5px 10px;
+
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+
+/* 文件夹排序按钮：明确区分选中状态 */
+.writer-stats-dashboard .writer-stats-dashboard__folders-sort button.writer-stats-dashboard__folders-sort-button.is-active,
+.writer-stats-dashboard .writer-stats-dashboard__folders-sort button.writer-stats-dashboard__folders-sort-button[aria-pressed="true"] {
+  background-color: var(--interactive-accent) !important;
+  background-image: none !important;
+  border-color: var(--interactive-accent) !important;
+
+  /* 使用适合强调色背景的前景色 */
+  color: var(--text-on-accent) !important;
+
+  font-weight: 600;
+  opacity: 1;
+  box-shadow: none !important;
+}
+
+
+/* 当前路径与返回按钮 */
+
+.writer-stats-dashboard__folders-navigation {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.writer-stats-dashboard__folders-back {
+  flex: none;
+  padding: 5px 9px;
+}
+
+.writer-stats-dashboard__folders-location,
+.writer-stats-dashboard__folders-caption {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  overflow-wrap: anywhere;
+}
+
+.writer-stats-dashboard__folders-caption {
+  margin-bottom: 12px;
+}
+
+/* 四项统计指标 */
+
+.writer-stats-dashboard__folders-totals {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 12px;
+
+  background: var(--background-secondary);
+
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.writer-stats-dashboard__folders-total {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  min-width: 0;
+  padding: 14px;
+
+  border-right: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.writer-stats-dashboard__folders-total:last-child {
+  border-right: 0;
+}
+
+.writer-stats-dashboard__folders-total strong {
+  color: var(--text-normal);
+  font-size: 1.3em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 子文件夹列表 */
+
+.writer-stats-dashboard__folders-list {
+  display: grid;
+  gap: 8px;
+}
+
+
+.writer-stats-dashboard__folders-list button.writer-stats-dashboard__folders-row {
+  appearance: none;
+
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr) max-content;
+
+  align-items: center;
+  column-gap: 16px;
+  row-gap: 8px;
+
+  width: 100%;
+  min-width: 0;
+
+  /* 关键：覆盖 Obsidian 默认按钮高度 */
+  height: auto !important;
+  min-height: 64px;
+
+  margin: 0;
+  padding: 14px 16px;
+
+  box-sizing: border-box;
+
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 12px;
+
+  background: var(--background-secondary);
+  color: var(--text-normal) !important;
+
+  box-shadow: none !important;
+
+  text-align: left;
+  white-space: normal;
+  line-height: 1.4;
+
+  cursor: pointer;
+}
+
+
+.writer-stats-dashboard__folders-list button.writer-stats-dashboard__folders-row:hover {
+  background: var(--background-modifier-hover);
+}
+
+.writer-stats-dashboard__folders-list button.writer-stats-dashboard__folders-row:focus-visible,
+.writer-stats-dashboard__folders-sort button.writer-stats-dashboard__folders-sort-button:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+.writer-stats-dashboard__folders-name {
+  display: block;
+  min-width: 0;
+  color: var(--text-normal);
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.writer-stats-dashboard__folders-file-count {
+  display: inline;
+  margin-left: 6px;
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: var(--font-ui-small);
+}
+
+.writer-stats-dashboard__folders-values {
+  min-width: 0;
+  justify-self: end;
+  align-items: center;
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* 空数据 */
+
+.writer-stats-dashboard__folders-empty {
+  padding: 20px;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 12px;
+  background: var(--background-secondary);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* 中等宽度 Pane */
+
+@container (max-width: 600px) {
+  .writer-stats-dashboard__folders-totals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .writer-stats-dashboard__folders-total {
+    border-bottom: 1px solid var(--background-modifier-border);
+  }
+
+  .writer-stats-dashboard__folders-total:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .writer-stats-dashboard__folders-total:nth-last-child(-n+2) {
+    border-bottom: 0;
+  }
+}
+
+/* 窄 Pane */
+
+@container (max-width: 430px) {
+  .writer-stats-dashboard__folders-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .writer-stats-dashboard__folders-sort {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .writer-stats-dashboard__folders-sort button.writer-stats-dashboard__folders-sort-button {
+    min-width: 0;
+    padding: 4px 2px;
+  }
+
+  .writer-stats-dashboard__folders-list
+  button.writer-stats-dashboard__folders-row {
+    grid-template-columns: minmax(0,1fr);
+  }
+
+  .writer-stats-dashboard__folders-values {
+    grid-column: 1;
+    justify-self: start;
+    text-align: left;
+    white-space: normal;
+  }
 }

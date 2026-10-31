@@ -1,7 +1,8 @@
 import {
     ItemView,
     WorkspaceLeaf,
-    Notice
+    Notice,
+    setTooltip
 } from "obsidian";
 
 import type {
@@ -41,6 +42,10 @@ import type {
 import {
     renderFileRankingSection
 } from "./FileRankingSection";
+
+import {
+    renderFolderStatsSection
+} from "./FolderStatsSection";
 
 import type {
     FileWritingDetailService
@@ -91,6 +96,14 @@ export class WriterStatsView
 
     // 月份切换时保留用户选择的排行榜排序
     private fileRankingSort: FileRankingSort = "added";
+
+    // 文件夹浏览路径：空字符串表示根目录
+
+    private folderStatsPath = "";
+
+    // 文件夹统计排序
+
+    private folderStatsSort: FileRankingSort = "added";
 
     constructor(
         leaf: WorkspaceLeaf,
@@ -730,8 +743,8 @@ export class WriterStatsView
 
             // 
 
-            item.setAttribute(
-                "title",
+            setTooltip(
+                item,
                 [
                     day.date,
                     `新增: ${this.formatSigned(day.added)}`,
@@ -757,6 +770,12 @@ export class WriterStatsView
             cls:
                 "writer-stats-dashboard__trend-axis"
         });
+
+        // 7 日趋势：日期必须与柱状图网格中心对齐
+
+        if (summary.days.length <= 7) {
+            axis.addClass("is-short");
+        }
 
         axis.style.setProperty(
             "--writer-stats-dashboard-trend-columns",
@@ -1425,11 +1444,13 @@ export class WriterStatsView
         host.createDiv({
             cls:
                 "writer-stats-dashboard__history-loading",
-            text:"正在加载文件排行榜"
+            text: "正在加载文件夹统计文件排行榜"
         });
 
         const version = this.monthlyRequestVersion;
 
+        // 两个模块共用一次排行榜查询，避免重复读取历史活动
+        
         void this.fileRankingService.getRanking(
             summary.startDate,
             summary.endDate
@@ -1443,14 +1464,63 @@ export class WriterStatsView
 
             host.empty();
 
+            // 文件夹统计容器
+
+            const folderHost = host.createDiv({
+                cls:
+                    "writer-stats-dashboard__folders-host"
+            });
+
+            // 原有文件排行榜容器
+
+            const rankingHost = host.createDiv({
+                cls:
+                    "writer-stats-dashboard__files-host"
+            });
+
+            // 文件夹导航、排序时只重新渲染，文件夹组件，不再次读取 Repository
+
+            const drawFolders = (): void => {
+                if (!folderHost.isConnected) {
+                    return;
+                }
+
+                folderHost.empty();
+
+                renderFolderStatsSection(
+                    folderHost,
+                    ranking,
+                    this.folderStatsPath,
+                    this.folderStatsSort,
+
+                    path => {
+                        this.folderStatsPath = path;
+                        drawFolders();
+                    },
+
+                    sort => {
+                        this.folderStatsSort = sort;
+                        drawFolders();
+                    }
+                );
+            };
+
+            // 首次显示文件夹统计
+
+            drawFolders();
+
+            // 保留原有文件写作排行榜
+
             renderFileRankingSection(
-                host,
+                rankingHost,
                 this.app,
                 ranking,
                 this.fileRankingSort,
+
                 sort => {
                     this.fileRankingSort = sort;
                 },
+
                 filePath => {
                     new FileWritingDetailModal(
                         this.app,
@@ -1465,12 +1535,12 @@ export class WriterStatsView
             if (
                 version !== this.monthlyRequestVersion ||
                 !host.isConnected
-            ){
+            ) {
                 return;
             }
 
             console.error(
-                "[Writer Stats] 文件排行榜加载失败",
+                "[Writer Stats] 文件夹/排行榜加载失败",
                 error
             );
 
@@ -1479,7 +1549,9 @@ export class WriterStatsView
             host.createDiv({
                 cls:
                     "writer-stats-dashboard__history-error",
-                text: "文件排行榜加载失败，请切换月份重试"
+                text:
+                    "文件夹统计与文件排行榜加载失败。" +
+                    "请切换月份重试"
             });
         });
     }
