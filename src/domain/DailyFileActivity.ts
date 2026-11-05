@@ -9,4 +9,10 @@ export interface DailyFileActivity {
     added: CountResult;
     deleted: CountResult;
     net: CountResult;
+
+    // 可选编辑市场
+    time?: {
+        activeMs: number;
+        hourlyMs: number[];
+    }
 }

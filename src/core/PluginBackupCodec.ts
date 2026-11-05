@@ -92,6 +92,37 @@ function validCounts(
     });
 }
 
+function valiWritingTime(
+    value: unknown
+):boolean {
+    if (
+        !record(value) ||
+        !integer(value.activeMs)
+    ) {
+        return false;
+    }
+
+    if (
+        !Array.isArray(value.hourlyMs) ||
+        value.hourlyMs.length !== 24
+    ) {
+        return false;
+    }
+
+    if (
+        !value.hourlyMs.every(
+            hour => integer(hour)
+        )
+    ){
+        return false;
+    }
+
+    return value.hourlyMs.reduce(
+        (sum: number, ms: number) =>
+            sum + ms,
+        0
+    ) === value.activeMs;
+}
 
 function safePath(
     path: unknown
@@ -179,7 +210,11 @@ export function validateBackupData(
             !validCounts(entry.start) ||
             !validCounts(entry.added) ||
             !validCounts(entry.deleted) ||
-            !validCounts(entry.net, true)
+            !validCounts(entry.net, true) ||
+            (
+                entry.time !== undefined &&
+                !valiWritingTime(entry.time)
+            )
         ) {
             throw new Error(
                 `无效历史活动: ${key}`

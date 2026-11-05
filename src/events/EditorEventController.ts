@@ -8,11 +8,15 @@ import {
 import { ActivityTracker } from "../core/ActivityTracker";
 import { TextAnalyzer } from "../core/TextAnalyzer";
 import { getLocalDateKey } from "../utils/DateService";
+import { WritingTimeClock } from "../core/WritingTimeClock";
 
 const EDIT_DEBOUNCE_MS = 500;
 
 export class EditorEventController {
     private readonly timers = new Map<string, number>();
+
+    private readonly writingClock = new WritingTimeClock();
+    private processing: Promise<void> = Promise.resolve();
 
     constructor(
         private readonly plugin: Plugin,
@@ -62,6 +66,7 @@ export class EditorEventController {
         }
 
         this.timers.clear();
+        this.writingClock.reset();
     }
 
     private initializeOpenMarkdownFiles(): void {
@@ -96,6 +101,15 @@ export class EditorEventController {
         editor: Editor,
         file: TFile
     ): void {
+        const at = new Date();
+
+        this.writingClock.record(
+            file.path,
+            getLocalDateKey(at),
+            at.getHours(),
+            at.getTime()
+        );
+
         const existing = this.timers.get(file.path);
 
         if (existing !== undefined) {
@@ -105,7 +119,16 @@ export class EditorEventController {
         const timer = window.setTimeout(() => {
             this.timers.delete(file.path);
 
-            void this.processEditorChange(editor, file);
+            // void this.processEditorChange(editor, file);
+            this.processing = this.processing.then(() => this.processEditorChange(
+                editor,
+                file
+            )).catch(error => {
+                console.error(
+                    "[Writer Stats] 编辑统计保存失败",
+                    error
+                );
+            });
         }, EDIT_DEBOUNCE_MS);
 
         this.timers.set(file.path, timer);
@@ -119,7 +142,31 @@ export class EditorEventController {
         const counts = this.analyzer.analyze(text);
         const date = getLocalDateKey();
 
-        await this.tracker.track(date, file.path, Date.now(), counts);
+        // await this.tracker.track(date, file.path, Date.now(), counts);
+
+        const time  = this.writingClock.take(
+            file.path,
+            date
+        );
+
+        try{
+            await this.tracker.track(
+                date,
+                file.path,
+                Date.now(),
+                counts,
+                time
+            );
+        }catch(error) {
+            this.writingClock.restore(
+                file.path,
+                date,
+                time
+            );
+
+            throw error;
+        }
+
         await this.onActivityUpdated?.(date);
     }
 }

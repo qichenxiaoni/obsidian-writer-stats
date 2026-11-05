@@ -2,12 +2,12 @@ import type { CountResult } from "../domain/CountResult";
 import type { DailyFileActivity } from "../domain/DailyFileActivity";
 import type { FileSnapshot } from "../domain/FileSnapshot";
 import type { StatsRepository } from "../persistence/StatsRepository";
-
 import { diffCounts } from "./CountDiff";
 import {
     addCounts,
     createEmptyCount
 } from "./CountMath";
+import type { WritingTimeDelta } from "./WritingTimeClock";
 
 export class ActivityTracker {
     constructor(
@@ -45,7 +45,8 @@ export class ActivityTracker {
         date: string,
         filePath: string,
         modifiedAt: number,
-        currentCounts: CountResult
+        currentCounts: CountResult,
+        time?: WritingTimeDelta
     ): Promise<DailyFileActivity> {
         const previousSnapshot = await this.repository.getSnapshot(filePath);
 
@@ -63,7 +64,31 @@ export class ActivityTracker {
             const existingActivity = await this.repository.getActivity(date, filePath);
 
             if (existingActivity) {
-                return existingActivity;
+                if (!time?.activeMs) {
+                    return existingActivity;
+                }
+
+                const previous = existingActivity.time;
+
+                const updated: DailyFileActivity = {
+                    ...existingActivity,
+                    time: {
+                        activeMs:
+                            (previous?.activeMs ?? 0) +
+                            time.activeMs,
+
+                        hourlyMs: Array.from(
+                            { length: 24 },
+                            (_, hour) => 
+                                (previous?.hourlyMs[hour] ?? 0) +
+                                time.hourlyMs[hour]
+                        )
+                    }
+                };
+
+                await this.repository.saveActivity(updated);
+
+                return updated;
             }
 
             const activity: DailyFileActivity = {
@@ -72,7 +97,8 @@ export class ActivityTracker {
                 start: currentCounts,
                 added: createEmptyCount(),
                 deleted: createEmptyCount(),
-                net: createEmptyCount()
+                net: createEmptyCount(),
+                ...(time?.activeMs ? { time } : {})
             };
 
             await this.repository.saveActivity(activity);
@@ -104,8 +130,26 @@ export class ActivityTracker {
             };
         }
 
+        const previousTime = activity.time;
+
+        const updatedTime = time?.activeMs
+            ? {
+                activeMs: 
+                    (previousTime?.activeMs ?? 0) +
+                    time.activeMs,
+                hourlyMs: Array.from(
+                    { length: 24 },
+                    (_, hour) => 
+                    (previousTime?.hourlyMs[hour] ?? 0) +
+                    time?.hourlyMs[hour]
+                )
+            }
+            : previousTime;
+
         const updatedActivity: DailyFileActivity = {
             ...activity,
+
+            ...(updatedTime ? { time: updatedTime }: {}),
 
             added: addCounts(
                 activity.added,

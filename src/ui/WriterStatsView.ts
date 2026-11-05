@@ -67,6 +67,14 @@ import {
     saveMonthlyCsvToVault
 } from "./CsvVaultExporter";
 
+import type {
+    WritingTimeAnalysisService
+} from "../core/WritingTimeAnalysisService";
+
+import {
+    renderWritingTimeSection
+} from "./WritingTimeSection";
+
 
 export const WRITER_STATS_VIEW_TYPE =
     "writer-stats-dashboard";
@@ -116,12 +124,15 @@ export class WriterStatsView
 
         private readonly fileRankingService:
             FileRankingService,
-        
+
         private readonly fileWritingDetailService:
             FileWritingDetailService,
-        
+
         private readonly monthlyCsvExportService:
-            MonthlyCsvExportService
+            MonthlyCsvExportService,
+
+        private readonly writingTimeAnalysisService:
+            WritingTimeAnalysisService
     ) {
         super(leaf);
     }
@@ -231,6 +242,7 @@ export class WriterStatsView
                 content,
                 date
             );
+
 
             container.scrollTop = previousScrollTop;
         } catch (error) {
@@ -883,9 +895,9 @@ export class WriterStatsView
     private renderAnnualHeatmapSection(
         container: HTMLElement,
         today: string
-    ):void {
+    ): void {
         const currentYear = Number(
-            today.slice(0,4)
+            today.slice(0, 4)
         );
 
         let year = Math.min(
@@ -903,10 +915,10 @@ export class WriterStatsView
                 "writer-stats-dashboard__annual-header"
         });
 
-        header.createEl("h2",{
+        header.createEl("h2", {
             cls:
                 "writer-stats-dashboard__section-title",
-            text:"年度写作热力图"
+            text: "年度写作热力图"
         });
 
         const controls = header.createDiv({
@@ -968,14 +980,14 @@ export class WriterStatsView
                 });
             }
 
-            try{
+            try {
                 const firstDate = `${requestedYear}-01-01`;
 
-                const lastDate = 
+                const lastDate =
                     requestedYear === currentYear
                         ? today
                         : `${requestedYear}-12-31`
-                
+
                 const summary =
                     await this.historyService.getSummary(
                         firstDate,
@@ -1142,7 +1154,7 @@ export class WriterStatsView
             "生成每日汇总与文件明细";
 
         // 点击导出当前选择的自然月
-        exportButton.addEventListener("click",() => {
+        exportButton.addEventListener("click", () => {
             // 立即保存月份，避免用户切换月份时混淆
             const requestedMonth = month;
 
@@ -1153,7 +1165,7 @@ export class WriterStatsView
             void (async () => {
                 try {
                     // 生成两份 CSV 内容
-                    const bundle = 
+                    const bundle =
                         await this.monthlyCsvExportService
                             .buildMonthlyCsv(
                                 requestedMonth,
@@ -1170,7 +1182,7 @@ export class WriterStatsView
                         `已导出 ${requestedMonth} 的两份 CSV` +
                         `Writer Stats Exports`
                     );
-                } catch(error) {
+                } catch (error) {
                     console.error(
                         "[Writer Stats] CSV 导出失败",
                         error
@@ -1249,6 +1261,11 @@ export class WriterStatsView
                 content.empty();
 
                 this.renderMonthlyContent(
+                    content,
+                    summary
+                );
+
+                this.renderMonthlyWritingTime(
                     content,
                     summary
                 );
@@ -1432,6 +1449,57 @@ export class WriterStatsView
     * 旧月份的结果覆盖新界面。
     */
 
+    private renderMonthlyWritingTime (
+        container: HTMLElement,
+        summary: MonthlyWritingSummary
+    ): void {
+        const host = container.createDiv({
+            cls:
+                "writer-stats-dashboard__writing-time-host",
+            text: "正在加载写作时间分析...."
+        });
+
+        const version = this.monthlyRequestVersion;
+
+        void this.writingTimeAnalysisService
+            .getSummary(
+                summary.startDate,
+                summary.endDate
+            )
+            .then(result => {
+                if (
+                    version !== this.monthlyRequestVersion ||
+                    !host.isConnected
+                ) {
+                    return;
+                }
+
+                host.empty();
+
+                renderWritingTimeSection(
+                    host,
+                    result
+                );
+            })
+            .catch(error => {
+                if (
+                    version !== this.monthlyRequestVersion ||
+                    !host.isConnected
+                ) {
+                    return;
+                }
+
+                console.error(
+                    "[Writer Stats] 写作时间分析加载失败",
+                    error
+                );
+
+                host.setText(
+                    "写作时间分析加载失败，请切换月份重试"
+                );
+            });
+    }
+
     private renderMonthlyFileRanking(
         container: HTMLElement,
         summary: MonthlyWritingSummary
@@ -1450,7 +1518,7 @@ export class WriterStatsView
         const version = this.monthlyRequestVersion;
 
         // 两个模块共用一次排行榜查询，避免重复读取历史活动
-        
+
         void this.fileRankingService.getRanking(
             summary.startDate,
             summary.endDate
