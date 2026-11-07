@@ -1,25 +1,29 @@
-import type { DailyFileActivity } from
-    "../domain/DailyFileActivity";
+import type { DailyFileActivity } from "../domain/DailyFileActivity";
 
-import type { FileSnapshot } from
-    "../domain/FileSnapshot";
+import type { FileSnapshot } from "../domain/FileSnapshot";
 
 import {
     createEmptyPluginData,
     type PluginData
 } from "../domain/PluginData";
 
-import type { PluginDataStore } from
-    "./PluginDataStore";
+import type { PluginDataStore } from "./PluginDataStore";
 
-import type { StatsRepository } from
-    "./StatsRepository";
+import type { StatsRepository } from "./StatsRepository";
+
+import { PluginDataMutationQueue } from "./PluginDataMutationQueue";
 
 export class JsonStatsRepository
     implements StatsRepository {
+
+    private readonly mutations:
+        PluginDataMutationQueue;
+
     constructor(
         private readonly store: PluginDataStore
-    ) { }
+    ) {
+        this.mutations = PluginDataMutationQueue.forStore(store);
+    }
 
     async getSnapshot(
         filePath: string
@@ -32,12 +36,9 @@ export class JsonStatsRepository
     async saveSnapshot(
         snapshot: FileSnapshot
     ): Promise<void> {
-        const data = await this.loadData();
-
-        data.fileSnapshots[snapshot.path] =
-            snapshot;
-
-        await this.store.save(data);
+        await this.mutations.run(data => {
+            data.fileSnapshots[snapshot.path] = snapshot;
+        });
     }
 
     async getActivity(
@@ -57,16 +58,14 @@ export class JsonStatsRepository
     async saveActivity(
         activity: DailyFileActivity
     ): Promise<void> {
-        const data = await this.loadData();
-
-        data.dailyActivities[
-            this.createActivityKey(
-                activity.date,
-                activity.filePath
-            )
-        ] = activity;
-
-        await this.store.save(data);
+        await this.mutations.run(data => {
+            data.dailyActivities[
+                this.createActivityKey(
+                    activity.date,
+                    activity.filePath
+                )
+            ] = activity;
+        });
     }
 
     async getActivitiesForDate(
@@ -77,8 +76,7 @@ export class JsonStatsRepository
         return Object.values(
             data.dailyActivities
         ).filter(
-            activity =>
-                activity.date === date
+            activity => activity.date === date
         );
     }
 
@@ -86,57 +84,82 @@ export class JsonStatsRepository
         oldPath: string,
         newPath: string
     ): Promise<void> {
-        const data = await this.loadData();
+        await this.mutations.run(data => {
+            const snapshot =
+                data.fileSnapshots[oldPath];
 
-        const snapshot =
-            data.fileSnapshots[oldPath];
+            if (snapshot) {
+                delete data.fileSnapshots[oldPath];
 
-        if (snapshot) {
-            delete data.fileSnapshots[oldPath];
-
-            data.fileSnapshots[newPath] = {
-                ...snapshot,
-                path: newPath
-            };
-        }
-
-        const entries = Object.entries(
-            data.dailyActivities
-        );
-
-        for (const [key, activity] of entries) {
-            if (
-                activity.filePath !== oldPath
-            ) {
-                continue;
+                data.fileSnapshots[newPath] = {
+                    ...snapshot,
+                    path: newPath
+                };
             }
 
-            delete data.dailyActivities[key];
+            for (const [key, activity] of Object.entries(data.dailyActivities)) {
+                if (
+                    activity.filePath !== oldPath
+                ) {
+                    continue;
+                }
 
-            const renamedActivity = {
-                ...activity,
-                filePath: newPath
-            };
+                delete data.dailyActivities[key];
 
-            data.dailyActivities[
-                this.createActivityKey(
-                    renamedActivity.date,
-                    newPath
-                )
-            ] = renamedActivity;
-        }
+                const renamedActivity = {
+                    ...activity,
+                    filePath: newPath
+                };
 
-        await this.store.save(data);
+                data.dailyActivities[
+                    this.createActivityKey(
+                        renamedActivity.date,
+                        newPath
+                    )
+                ] = renamedActivity;
+            }
+        })
     }
 
     async removeSnapshot(
         filePath: string
     ): Promise<void> {
+        await this.mutations.run(data => {
+            delete data.fileSnapshots[filePath];
+        });
+    }
+
+    async saveTrackingResult(
+        snapshot: FileSnapshot,
+        activity: DailyFileActivity
+    ): Promise<void> {
+        await this.mutations.run(data => {
+            data.fileSnapshots[
+                snapshot.path
+            ] = snapshot;
+
+            data.dailyActivities[
+                this.createActivityKey(
+                    activity.date,
+                    activity.filePath
+                )
+            ] = activity;
+        })
+    }
+
+    async getActivitiesBetween(
+        startDate: string,
+        endDate: string
+    ): Promise<DailyFileActivity[]> {
         const data = await this.loadData();
 
-        delete data.fileSnapshots[filePath];
-
-        await this.store.save(data);
+        return Object.values(
+            data.dailyActivities
+        ).filter(
+            activity =>
+                activity.date >= startDate &&
+                activity.date <= endDate
+        );
     }
 
     private async loadData(): Promise<PluginData> {
@@ -151,41 +174,5 @@ export class JsonStatsRepository
         filePath: string
     ): string {
         return `${date}:${filePath}`;
-    }
-
-    async saveTrackingResult(
-        snapshot: FileSnapshot,
-        activity: DailyFileActivity
-    ): Promise<void> {
-        const data = await this.loadData();
-
-        data.fileSnapshots[
-            snapshot.path
-        ] = snapshot;
-
-        data.dailyActivities[
-            this.createActivityKey(
-                activity.date,
-                activity.filePath
-            )
-        ] = activity;
-
-        await this.store.save(data);
-    }
-
-    async getActivitiesBetween(
-        startDate: string,
-        endDate: string
-    ): Promise<DailyFileActivity[]> {
-        const data =
-            await this.loadData();
-
-        return Object.values(
-            data.dailyActivities
-        ).filter(
-            activity =>
-                activity.date >= startDate &&
-                activity.date <= endDate
-        );
     }
 }

@@ -1,11 +1,16 @@
 import type { PluginSettings } from "../domain/PluginSettings";
 import type { PluginDataStore } from "../persistence/PluginDataStore";
+import { PluginDataMutationQueue } from "../persistence/PluginDataMutationQueue";
 
 export class PluginSettingsService {
+    private readonly mutations: PluginDataMutationQueue;
+
     constructor(
         private readonly store:
             PluginDataStore
-    ) {}
+    ) {
+        this.mutations = PluginDataMutationQueue.forStore(store);
+    }
 
     async getSettings():
         Promise<PluginSettings> {
@@ -29,31 +34,38 @@ export class PluginSettingsService {
                 );
             }
 
-            const data =
-                await this.store.load();
+            let result: PluginSettings | undefined;
 
-            // 没变化时不重复写磁盘
-            if (
-                data.settings.dailyGoal ===
-                dailyGoal
-            ) {
-                return {
-                    ...data.settings
-                };
-            }
+            await this.mutations.run(data => {
+                // 目标没有变化，不进行磁盘写入
+                if (
+                    data.settings.dailyGoal === dailyGoal
+                ) {
+                    result = {
+                        ...data.settings
+                    };
 
-            const settings:
-                PluginSettings = {
+                    return false;
+                }
+
+                data.settings = {
                     ...data.settings,
                     dailyGoal
                 };
 
-            data.settings = settings;
+                result = {
+                    ...data.settings
+                };
 
-            await this.store.save(data);
+                return true;
+            });
 
-            return {
-                ...settings
-            };
+            if (!result) {
+                throw new Error(
+                    "Failed to save daily goal"
+                );
+            }
+
+            return result;
         }
 }
