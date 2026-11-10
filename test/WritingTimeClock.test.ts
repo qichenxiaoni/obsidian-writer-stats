@@ -204,4 +204,38 @@ describe("WritingTimeClock", () => {
             ).activeMs
         ).toBe(2000);
     });
+
+    test("切换文件中断会话，但保留待保存时长", () => {
+        const clock = new WritingTimeClock();
+
+        clock.record(
+            "A.md",
+            "2026-11-04",
+            9,
+            1000
+        );
+
+        clock.record(
+            "A.md",
+            "2026-11-04",
+            9,
+            3000
+        );
+        
+        clock.breakSession();
+
+        clock.record(
+            "A.md",
+            "2026-11-04",
+            9,
+            5000
+        );
+
+        expect(
+            clock.take(
+                "A.md",
+                "2026-11-04"
+            ).activeMs
+        ).toBe(2000);
+    });
 });

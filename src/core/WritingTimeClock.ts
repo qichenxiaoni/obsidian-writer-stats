@@ -103,6 +103,11 @@ export class WritingTimeClock {
         this.pending.set(key,current);
     }
 
+    //  中断当前活跃编辑会话，不清除尚未保存的计时增量
+    breakSession(): void {
+        this.last = null;
+    }
+
     reset(): void {
         this.last = null;
         this.pending.clear();

@@ -91,17 +91,16 @@ export default class WordCountPlugin extends Plugin {
             analyze,
             this.activityTracker,
 
-            async date => {
-                await this.statusBar.refresh(
-                    date
-                );
+            async () => {
+                // 历史日期的数据回写不应影响今日状态栏
+                await this.statusBar.refresh();
 
                 await this.refreshWriterStatsDashboard();
             }
         )
         this.editorEvents.start();
 
-        this.vaultEvents = new VaultEventController(this, this.repository);
+        this.vaultEvents = new VaultEventController(this, this.repository,this.editorEvents);
         this.vaultEvents.start();
 
         this.registerView(
@@ -273,11 +272,29 @@ export default class WordCountPlugin extends Plugin {
 
     onunload(): void {
 
-        this.app.workspace
-            .detachLeavesOfType(
-                WRITER_STATS_VIEW_TYPE
-            );
-        this.editorEvents?.stop();
+        this.app.workspace.detachLeavesOfType(WRITER_STATS_VIEW_TYPE);
+        
+        // 立即启动剩余编辑与文件事件的收尾任务
+        const editorFlush =  this.editorEvents?.stop();
+        const vaultFlush = this.vaultEvents?.stop();
+
+        // 监控任务结果，但不能依赖 Obsidian 等待其完成
+        void Promise.allSettled(
+            [editorFlush,vaultFlush].filter(
+                (task): task is Promise<void> => 
+                    task !== undefined
+            )
+        ).then(results => {
+            for (const result of results) {
+                if (result.status === "rejected") {
+                    console.error(
+                        "[Writer Stats] 插件关闭时保存失败",
+                        result.reason
+                    );
+                }
+            }
+        });
+
         this.statusBar?.stop();
 
         console.log("Word Count Plugin v1 unloaded");
