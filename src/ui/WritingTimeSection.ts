@@ -187,7 +187,8 @@ export function renderWritingTimeSection(
             track,
             fill,
             ms,
-            hourPeak
+            hourPeak,
+            24
         );
 
         if (hour % 4 === 0) {

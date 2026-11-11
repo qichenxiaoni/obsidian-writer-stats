@@ -1758,6 +1758,16 @@
   text-align: right;
 }
 
+/* Monthly Trend — Date Alignment Fix */
+
+/* 月度图表的首尾日期与对应柱子保持居中 */
+.writer-stats-dashboard__monthly
+.writer-stats-dashboard__trend-axis-label.is-first,
+.writer-stats-dashboard__monthly
+.writer-stats-dashboard__trend-axis-label.is-last {
+    text-align: center;
+}
+
 /* Best Writing Day */
 
 .writer-stats-dashboard__best-day {

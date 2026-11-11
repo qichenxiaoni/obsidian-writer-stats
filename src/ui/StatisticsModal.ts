@@ -7,6 +7,14 @@ import type { DailyOverviewService } from "../core/DailyOverviewService";
 import type { GoalProgress } from "../domain/GoalProgress";
 import type { DailyHistoryService } from "../core/DailyHistoryService";
 import type { DailyHistorySummary } from "../domain/DailyHistorySummary";
+import {
+    formatDate,
+    formatSigned,
+    formatTrendDate,
+    getTrendBarHeight,
+    shouldShowTrendLabel
+} from "./StatsPresentation";
+
 export class StatisticsModal extends Modal {
     constructor(
         app: App,
@@ -87,7 +95,7 @@ export class StatisticsModal extends Modal {
                 "writer-stats-modal__date",
 
             text:
-                this.formatDate(this.date)
+                formatDate(this.date)
         });
 
 
@@ -118,7 +126,7 @@ export class StatisticsModal extends Modal {
         this.createMetric(
             summaryGrid,
             "净增长",
-            this.formatSigned(
+            formatSigned(
                 summary.net.total
             )
         );
@@ -341,7 +349,7 @@ export class StatisticsModal extends Modal {
         this.createSmallStat(
             stats,
             "净增",
-            this.formatSigned(
+            formatSigned(
                 activity.net.total
             )
         );
@@ -367,31 +375,6 @@ export class StatisticsModal extends Modal {
         });
     }
 
-    private formatSigned(
-        value: number
-    ): string {
-        if (value > 0) {
-            return `+${value}`;
-        }
-
-        return String(value)
-    }
-
-    private formatDate(
-        date: string
-    ): string {
-        const [
-            year,
-            month,
-            day
-        ] = date.split("-");
-
-        return (
-            `${year}年` +
-            `${Number(month)}月` +
-            `${Number(day)}日`
-        );
-    }
 
     private async openFile(
         file: TFile
@@ -697,7 +680,7 @@ export class StatisticsModal extends Modal {
         this.createHistoryMetric(
             grid,
             "新增",
-            this.formatHistorySigned(
+            formatSigned(
                 summary.added
             )
         );
@@ -713,7 +696,7 @@ export class StatisticsModal extends Modal {
         this.createHistoryMetric(
             grid,
             "净增长",
-            this.formatHistorySigned(
+            formatSigned(
                 summary.net
             )
         );
@@ -800,16 +783,6 @@ export class StatisticsModal extends Modal {
         });
     }
 
-    private formatHistorySigned(
-        value: number
-    ): string {
-        if (value > 0) {
-            return `+${value}`;
-        }
-
-        return String(value);
-    }
-
     private renderHistoryTrend(
         container: HTMLElement,
         summary: DailyHistorySummary
@@ -872,7 +845,7 @@ export class StatisticsModal extends Modal {
 
 
             const height =
-                this.getTrendBarHeight(
+                getTrendBarHeight(
                     day.added,
                     maxAdded,
                     summary.days.length
@@ -906,9 +879,9 @@ export class StatisticsModal extends Modal {
                 "title",
                 [
                     day.date,
-                    `新增：${this.formatHistorySigned(day.added)}`,
+                    `新增：${formatSigned(day.added)}`,
                     `删除：${day.deleted}`,
-                    `净增长：${this.formatHistorySigned(day.net)}`
+                    `净增长：${formatSigned(day.net)}`
                 ].join("\n")
             );
         }
@@ -953,13 +926,13 @@ export class StatisticsModal extends Modal {
 
 
             if (
-                this.shouldShowTrendLabel(
+                shouldShowTrendLabel(
                     index,
                     summary.days.length
                 )
             ) {
                 label.setText(
-                    this.formatTrendDate(
+                    formatTrendDate(
                         day.date
                     )
                 );
@@ -981,66 +954,6 @@ export class StatisticsModal extends Modal {
                 );
             }
         }
-    }
-
-    private getTrendBarHeight(
-        value: number,
-        maxValue: number,
-        totalDays: number
-    ): number {
-        if (
-            value <= 0 ||
-            maxValue <= 0
-        ) {
-            return 0;
-        }
-
-        const ratio =
-            value / maxValue;
-
-        if (totalDays <= 7) {
-            return Math.max(
-                ratio * 100,
-                8
-            );
-        }
-
-        return Math.max(
-            Math.sqrt(ratio) * 100,
-            5
-        );
-    }
-
-    private shouldShowTrendLabel(
-        index: number,
-        total: number
-    ): boolean {
-        // 7day：全部显示
-        if (total <= 7) {
-            return true;
-        }
-
-        // 30day:显示第一天、每五天、最后一天
-        return (
-            index === 0 ||
-            index === total - 1 ||
-            index % 5 === 0
-        );
-    }
-
-    private formatTrendDate(
-        date: string
-    ): string {
-        const parts =
-            date.split("-");
-
-        if (parts.length !== 3) {
-            return date;
-        }
-
-        return (
-            `${parts[1]}/${parts[2]}`
-        );
     }
 
     private async renderYearHeatmap(

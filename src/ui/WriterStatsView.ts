@@ -75,6 +75,14 @@ import {
     renderWritingTimeSection
 } from "./WritingTimeSection";
 
+import {
+    formatDate,
+    formatSigned,
+    formatTrendDate,
+    getTrendBarHeight,
+    shouldShowTrendLabel
+} from "./StatsPresentation";
+
 
 export const WRITER_STATS_VIEW_TYPE =
     "writer-stats-dashboard";
@@ -184,17 +192,22 @@ export class WriterStatsView
         ++this.heatmapRequestVersion;
 
         // 
-        const previousScrollTop = container.scrollTop;
+        // const previousScrollTop = container.scrollTop;
 
         // 
         const days = this.historyRangeDays;
 
-        container.empty();
+        // 后台刷新时保留已渲染内容，避免每次编辑都闪现加载界面，初次打开仍然显示加载提示。
+        if (!container.querySelector(
+            ".writer-stats-dashboard__content"
+        )){
+            container.empty();
 
-        container.createDiv({
-            cls: "writer-stats-dashboard__loading",
-            text: "正在加载写作统计"
-        });
+            container.createDiv({
+                cls: "writer-stats-dashboard__loading",
+                text: "正在加载写作统计"
+            });
+        }
 
         try {
             const [overview, history] = await Promise.all([
@@ -210,6 +223,9 @@ export class WriterStatsView
             if (currentVersion !== this.refreshVersion) {
                 return;
             }
+
+            // 使用数据返回时最新的滚动位置，避免异步查询期间的滚动被覆盖
+            const scrollTopBeforeRender = container.scrollTop;
 
             container.empty();
 
@@ -244,7 +260,7 @@ export class WriterStatsView
             );
 
 
-            container.scrollTop = previousScrollTop;
+            container.scrollTop = scrollTopBeforeRender;
         } catch (error) {
             if (currentVersion !== this.refreshVersion) {
                 return;
@@ -306,7 +322,7 @@ export class WriterStatsView
                 "writer-stats-dashboard__subtitle",
 
             text:
-                `${this.formatDate(date)} · 写作数据概览`
+                `${formatDate(date)} · 写作数据概览`
         });
     }
 
@@ -371,7 +387,7 @@ export class WriterStatsView
         this.createMetricCard(
             metricGrid,
             "净增长",
-            this.formatSigned(
+            formatSigned(
                 overview.summary.net.total
             ),
             "新增减去删除"
@@ -601,7 +617,7 @@ export class WriterStatsView
         this.createOverviewItem(
             grid,
             "新增",
-            this.formatSigned(summary.added)
+            formatSigned(summary.added)
         );
 
         this.createOverviewItem(
@@ -613,7 +629,7 @@ export class WriterStatsView
         this.createOverviewItem(
             grid,
             "净增长",
-            this.formatSigned(summary.net)
+            formatSigned(summary.net)
         );
 
         this.createOverviewItem(
@@ -663,7 +679,7 @@ export class WriterStatsView
                     "writer-stats-dashboard__best-day-value",
                 text:
                     `${bestWritingDay.date} ·` +
-                    this.formatSigned(bestWritingDay.added)
+                    formatSigned(bestWritingDay.added)
             });
         } else {
             bestDay.createDiv({
@@ -678,7 +694,8 @@ export class WriterStatsView
 
     private renderHistoryTrend(
         container: HTMLElement,
-        summary: DailyHistorySummary
+        summary: DailyHistorySummary,
+        showAllDateLabels = false
     ): void {
         const section = container.createDiv({
             cls:
@@ -730,7 +747,7 @@ export class WriterStatsView
 
             // 
 
-            const height = this.getTrendBarHeight(
+            const height = getTrendBarHeight(
                 day.added,
                 maxAdded,
                 summary.days.length
@@ -759,9 +776,9 @@ export class WriterStatsView
                 item,
                 [
                     day.date,
-                    `新增: ${this.formatSigned(day.added)}`,
+                    `新增: ${formatSigned(day.added)}`,
                     `删除: ${day.deleted}`,
-                    `净增长: ${this.formatSigned(day.net)}`
+                    `净增长: ${formatSigned(day.net)}`
                 ].join("\n")
             );
 
@@ -809,13 +826,14 @@ export class WriterStatsView
             // 
 
             if (
-                this.shouldShowTrendLabel(
+                showAllDateLabels ||
+                shouldShowTrendLabel(
                     index,
                     summary.days.length
                 )
             ) {
                 label.setText(
-                    this.formatTrendDate(day.date)
+                    formatTrendDate(day.date)
                 );
             }
 
@@ -829,65 +847,6 @@ export class WriterStatsView
                 label.classList.add("is-last");
             }
         }
-    }
-
-    // Trend Helpers
-
-    // 
-    private getTrendBarHeight(
-        value: number,
-        maxValue: number,
-        totalDays: number
-    ): number {
-        if (
-            value <= 0 ||
-            maxValue <= 0
-        ) {
-            return 0;
-        }
-
-        const ratio = value / maxValue;
-
-        if (totalDays <= 7) {
-            return Math.max(
-                ratio * 100,
-                8
-            );
-        }
-
-        return Math.max(
-            Math.sqrt(ratio) * 100,
-            5
-        );
-    }
-
-    // 控制日期标签密度
-    private shouldShowTrendLabel(
-        index: number,
-        total: number
-    ): boolean {
-        if (total <= 7) {
-            return true;
-        }
-
-        return (
-            index === 0 ||
-            index === total - 1 ||
-            index % 5 === 0
-        );
-    }
-
-    // 2026-10-07 -> 10/07
-    private formatTrendDate(
-        date: string
-    ): string {
-        const parts = date.split("-");
-
-        if (parts.length !== 3) {
-            return date;
-        }
-
-        return `${parts[1]}/${parts[2]}`;
     }
 
     // Dashboard 年度热力图，历史年份统计完整自然年，当前年份仅统计至今天，不允许向未来年份切换
@@ -1362,7 +1321,7 @@ export class WriterStatsView
         this.createOverviewItem(
             grid,
             "新增",
-            this.formatSigned(summary.added)
+            formatSigned(summary.added)
         );
 
         this.createOverviewItem(
@@ -1374,7 +1333,7 @@ export class WriterStatsView
         this.createOverviewItem(
             grid,
             "净增长",
-            this.formatSigned(summary.net)
+            formatSigned(summary.net)
         );
 
         this.createOverviewItem(
@@ -1406,7 +1365,8 @@ export class WriterStatsView
 
         this.renderHistoryTrend(
             container,
-            summary
+            summary,
+            summary.days.length <= 14
         );
 
         // 最佳写作日
@@ -1427,7 +1387,7 @@ export class WriterStatsView
             text: summary.bestWritingDay
                 ? (
                     `${summary.bestWritingDay.date} · ` +
-                    this.formatSigned(summary.bestWritingDay.added)
+                    formatSigned(summary.bestWritingDay.added)
                 )
                 : "本月暂无新增记录"
         });
@@ -1795,39 +1755,4 @@ export class WriterStatsView
         });
     }
 
-
-    /*
-     * ========================================
-     * Format
-     * ========================================
-     */
-
-    private formatSigned(
-        value: number
-    ): string {
-        if (value > 0) {
-            return `+${value}`;
-        }
-
-        return String(value);
-    }
-
-
-    private formatDate(
-        date: string
-    ): string {
-        const [
-            year,
-            month,
-            day
-        ] =
-            date.split("-");
-
-
-        return (
-            `${year}年` +
-            `${Number(month)}月` +
-            `${Number(day)}日`
-        );
-    }
 }
