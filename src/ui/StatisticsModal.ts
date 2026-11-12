@@ -9,11 +9,9 @@ import type { DailyHistoryService } from "../core/DailyHistoryService";
 import type { DailyHistorySummary } from "../domain/DailyHistorySummary";
 import {
     formatDate,
-    formatSigned,
-    formatTrendDate,
-    getTrendBarHeight,
-    shouldShowTrendLabel
+    formatSigned
 } from "./StatsPresentation";
+import { renderTrendChartSection } from "./TrendChartSection";
 
 export class StatisticsModal extends Modal {
     constructor(
@@ -719,10 +717,9 @@ export class StatisticsModal extends Modal {
             `${summary.longesWritingStreak} 天`
         );
 
-        this.renderHistoryTrend(
-            container,
-            summary
-        );
+        renderTrendChartSection(container,summary,{
+            variant: "modal"
+        });
 
         const bestDay =
             container.createDiv({
@@ -781,179 +778,6 @@ export class StatisticsModal extends Modal {
 
             text: value
         });
-    }
-
-    private renderHistoryTrend(
-        container: HTMLElement,
-        summary: DailyHistorySummary
-    ): void {
-        const section =
-            container.createDiv({
-                cls:
-                    "writer-stats-modal__trend"
-            });
-
-        section.createDiv({
-            cls:
-                "writer-stats-modal__trend-title",
-            text:
-                "每日新增趋势"
-        });
-
-
-        const maxAdded =
-            Math.max(
-                0,
-                ...summary.days.map(
-                    day => day.added
-                )
-            );
-
-
-        /*
-         * =========================
-         * Plot
-         * =========================
-         */
-
-        const plot =
-            section.createDiv({
-                cls:
-                    "writer-stats-modal__trend-plot"
-            });
-
-        plot.style.setProperty(
-            "--writer-stats-trend-columns",
-            String(
-                summary.days.length
-            )
-        );
-
-
-        for (const day of summary.days) {
-            const item =
-                plot.createDiv({
-                    cls:
-                        "writer-stats-modal__trend-item"
-                });
-
-            const bar =
-                item.createDiv({
-                    cls:
-                        "writer-stats-modal__trend-bar"
-                });
-
-
-            const height =
-                getTrendBarHeight(
-                    day.added,
-                    maxAdded,
-                    summary.days.length
-                );
-
-            bar.style.height =
-                `${height}%`;
-
-
-            if (day.added <= 0) {
-                bar.classList.add(
-                    "is-empty"
-                );
-            }
-
-
-            /*
-             * 最佳写作日额外标记。
-             */
-            if (
-                summary.bestWritingDay?.date ===
-                day.date
-            ) {
-                bar.classList.add(
-                    "is-best"
-                );
-            }
-
-
-            item.setAttribute(
-                "title",
-                [
-                    day.date,
-                    `新增：${formatSigned(day.added)}`,
-                    `删除：${day.deleted}`,
-                    `净增长：${formatSigned(day.net)}`
-                ].join("\n")
-            );
-        }
-
-
-        /*
-         * =========================
-         * X Axis
-         * =========================
-         *
-         * 日期标签单独绘制。
-         * 不再和柱子共用 item。
-         */
-
-        const axis =
-            section.createDiv({
-                cls:
-                    "writer-stats-modal__trend-axis"
-            });
-
-        axis.style.setProperty(
-            "--writer-stats-trend-columns",
-            String(
-                summary.days.length
-            )
-        );
-
-
-        for (
-            let index = 0;
-            index < summary.days.length;
-            index++
-        ) {
-            const day =
-                summary.days[index];
-
-            const label =
-                axis.createDiv({
-                    cls:
-                        "writer-stats-modal__trend-axis-label"
-                });
-
-
-            if (
-                shouldShowTrendLabel(
-                    index,
-                    summary.days.length
-                )
-            ) {
-                label.setText(
-                    formatTrendDate(
-                        day.date
-                    )
-                );
-            }
-
-
-            if (index === 0) {
-                label.classList.add(
-                    "is-first"
-                );
-            }
-
-            if (
-                index ===
-                summary.days.length - 1
-            ) {
-                label.classList.add(
-                    "is-last"
-                );
-            }
-        }
     }
 
     private async renderYearHeatmap(

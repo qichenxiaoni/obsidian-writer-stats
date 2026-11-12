@@ -1,8 +1,7 @@
 import {
     ItemView,
     WorkspaceLeaf,
-    Notice,
-    setTooltip
+    Notice
 } from "obsidian";
 
 import type {
@@ -77,11 +76,12 @@ import {
 
 import {
     formatDate,
-    formatSigned,
-    formatTrendDate,
-    getTrendBarHeight,
-    shouldShowTrendLabel
+    formatSigned
 } from "./StatsPresentation";
+
+import {
+    renderTrendChartSection
+} from "./TrendChartSection";
 
 
 export const WRITER_STATS_VIEW_TYPE =
@@ -652,10 +652,9 @@ export class WriterStatsView
 
         // 
 
-        this.renderHistoryTrend(
-            container,
-            summary
-        );
+        renderTrendChartSection(container,summary,{
+            variant: "dashboard"
+        });
 
         // 
 
@@ -687,165 +686,6 @@ export class WriterStatsView
                     "writer-stats-dashboard__best-day-value" + "is-empty",
                 text: "暂无写作记录"
             });
-        }
-    }
-
-    // Daily Trend
-
-    private renderHistoryTrend(
-        container: HTMLElement,
-        summary: DailyHistorySummary,
-        showAllDateLabels = false
-    ): void {
-        const section = container.createDiv({
-            cls:
-                "writer-stats-dashboard__trend"
-        });
-
-        section.createDiv({
-            cls:
-                "writer-stats-dashboard__trend-title",
-            text: "每日新增趋势"
-        });
-
-        const panel = section.createDiv({
-            cls:
-                "writer-stats-dashboard__trend-panel"
-        });
-
-        // 
-
-        const maxAdded = Math.max(
-            0,
-            ...summary.days.map(
-                day => day.added
-            )
-        );
-
-        // 
-
-        const plot = panel.createDiv({
-            cls:
-                "writer-stats-dashboard__trend-plot"
-        });
-
-        plot.style.setProperty(
-            "--writer-stats-dashboard-trend-columns",
-            String(summary.days.length)
-        );
-
-        for (const day of summary.days) {
-            const item = plot.createDiv({
-                cls:
-                    "writer-stats-dashboard__trend-item"
-            });
-
-            const bar = item.createDiv({
-                cls:
-                    "writer-stats-dashboard__trend-bar"
-            });
-
-            // 
-
-            const height = getTrendBarHeight(
-                day.added,
-                maxAdded,
-                summary.days.length
-            );
-
-            bar.style.height = `${height}%`;
-
-            // 
-
-            if (day.added <= 0) {
-                bar.classList.add("is-empty");
-            }
-
-            // 
-
-            if (
-                summary.bestWritingDay?.date ===
-                day.date
-            ) {
-                bar.classList.add("is-best");
-            }
-
-            // 
-
-            setTooltip(
-                item,
-                [
-                    day.date,
-                    `新增: ${formatSigned(day.added)}`,
-                    `删除: ${day.deleted}`,
-                    `净增长: ${formatSigned(day.net)}`
-                ].join("\n")
-            );
-
-            item.setAttribute(
-                "aria-label",
-                [
-                    day.date,
-                    `新增: ${day.added}`,
-                    `删除: ${day.deleted}`,
-                    `净增长: ${day.net}`
-                ].join("\n")
-            );
-        }
-
-        // 日期坐标轴
-
-        const axis = panel.createDiv({
-            cls:
-                "writer-stats-dashboard__trend-axis"
-        });
-
-        // 7 日趋势：日期必须与柱状图网格中心对齐
-
-        if (summary.days.length <= 7) {
-            axis.addClass("is-short");
-        }
-
-        axis.style.setProperty(
-            "--writer-stats-dashboard-trend-columns",
-            String(summary.days.length)
-        );
-
-        for (
-            let index = 0;
-            index < summary.days.length;
-            index++
-        ) {
-            const day = summary.days[index];
-
-            const label = axis.createDiv({
-                cls:
-                    "writer-stats-dashboard__trend-axis-label"
-            });
-
-            // 
-
-            if (
-                showAllDateLabels ||
-                shouldShowTrendLabel(
-                    index,
-                    summary.days.length
-                )
-            ) {
-                label.setText(
-                    formatTrendDate(day.date)
-                );
-            }
-
-            if (index === 0) {
-                label.classList.add("is-first");
-            }
-
-            if (
-                index === summary.days.length - 1
-            ) {
-                label.classList.add("is-last");
-            }
         }
     }
 
@@ -1363,11 +1203,10 @@ export class WriterStatsView
         * 不需要再次实现绘图方法。
         */
 
-        this.renderHistoryTrend(
-            container,
-            summary,
-            summary.days.length <= 14
-        );
+        renderTrendChartSection(container,summary,{
+            variant: "dashboard",
+            showAllDateLabels: summary.days.length <= 14
+        });
 
         // 最佳写作日
         const best = container.createDiv({
