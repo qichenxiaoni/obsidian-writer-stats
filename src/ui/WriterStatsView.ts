@@ -1,7 +1,6 @@
 import {
     ItemView,
-    WorkspaceLeaf,
-    Notice
+    WorkspaceLeaf
 } from "obsidian";
 
 import type {
@@ -23,11 +22,6 @@ import type {
 import {
     getLocalDateKey
 } from "../utils/DateService";
-
-import {
-    MonthlyStatsService,
-    shiftMonth
-} from "../core/MonthlyStatsService";
 
 import type {
     MonthlyWritingSummary
@@ -62,10 +56,6 @@ import type {
     MonthlyCsvExportService
 } from "../core/MonthlyCsvExportService";
 
-import {
-    saveMonthlyCsvToVault
-} from "./CsvVaultExporter";
-
 import type {
     WritingTimeAnalysisService
 } from "../core/WritingTimeAnalysisService";
@@ -83,6 +73,14 @@ import {
     renderTrendChartSection
 } from "./TrendChartSection";
 
+import {
+    renderMonthlyStatsSection,
+    type MonthlyStatsSectionHandle
+} from "./MonthlyStatsSection";
+
+import {
+    renderOverviewMetric
+} from "./OverviewMetric";
 
 export const WRITER_STATS_VIEW_TYPE =
     "writer-stats-dashboard";
@@ -101,8 +99,8 @@ export class WriterStatsView
     // 当前选择月份： null 表示当前自然月
     private selectedMonth: string | null = null;
 
-    // 防止旧月份查询覆盖较新的结果
-    private monthlyRequestVersion = 0;
+    // 月度模块自行管理请求版本和销毁
+    private monthlySection: MonthlyStatsSectionHandle | null = null;
 
     // 年度热力图异步请求版本
     private heatmapRequestVersion = 0;
@@ -172,7 +170,8 @@ export class WriterStatsView
 
     async onClose(): Promise<void> {
         ++this.refreshVersion;
-        ++this.monthlyRequestVersion;
+        this.monthlySection?.dispose();
+        this.monthlySection = null;
         ++this.heatmapRequestVersion;
 
         this.contentEl.empty();
@@ -188,7 +187,8 @@ export class WriterStatsView
         const currentVersion = ++this.refreshVersion;
 
         // 整体刷新时，让上一次月度请求失败
-        ++this.monthlyRequestVersion;
+        this.monthlySection?.dispose();
+        this.monthlySection = null;
         ++this.heatmapRequestVersion;
 
         // 
@@ -200,7 +200,7 @@ export class WriterStatsView
         // 后台刷新时保留已渲染内容，避免每次编辑都闪现加载界面，初次打开仍然显示加载提示。
         if (!container.querySelector(
             ".writer-stats-dashboard__content"
-        )){
+        )) {
             container.empty();
 
             container.createDiv({
@@ -254,10 +254,36 @@ export class WriterStatsView
             );
 
             // 在7/30天历史模块下方显示月度统计
-            this.renderMonthlySection(
+
+            this.monthlySection = renderMonthlyStatsSection(
                 content,
-                date
+                date,
+                {
+                    app: this.app,
+                    historyService: this.historyService,
+                    csvExportService: this.monthlyCsvExportService,
+                    selectedMonth: this.selectedMonth,
+
+                    onSelectMonth: month => {
+                        this.selectedMonth = month;
+                    },
+
+                    onSupplementaryContent: (host, summary, isCurrent) => {
+                        this.renderMonthlyWritingTime(
+                            host,
+                            summary,
+                            isCurrent
+                        );
+
+                        this.renderMonthlyFileRanking(
+                            host,
+                            summary,
+                            isCurrent
+                        );
+                    }
+                }
             );
+
 
 
             container.scrollTop = scrollTopBeforeRender;
@@ -614,37 +640,37 @@ export class WriterStatsView
                 "writer-stats-dashboard__overview-grid"
         });
 
-        this.createOverviewItem(
+        renderOverviewMetric(
             grid,
             "新增",
             formatSigned(summary.added)
         );
 
-        this.createOverviewItem(
+        renderOverviewMetric(
             grid,
             "删除",
             String(summary.deleted)
         );
 
-        this.createOverviewItem(
+        renderOverviewMetric(
             grid,
             "净增长",
             formatSigned(summary.net)
         );
 
-        this.createOverviewItem(
+        renderOverviewMetric(
             grid,
             "活跃天数",
             `${summary.activeDays} / ${summary.totalDays}`
         );
 
-        this.createOverviewItem(
+        renderOverviewMetric(
             grid,
             "连续写作",
             `${summary.writingStreak} 天`
         );
 
-        this.createOverviewItem(
+        renderOverviewMetric(
             grid,
             "最长连续",
             `${summary.longesWritingStreak} 天`
@@ -652,7 +678,7 @@ export class WriterStatsView
 
         // 
 
-        renderTrendChartSection(container,summary,{
+        renderTrendChartSection(container, summary, {
             variant: "dashboard"
         });
 
@@ -864,374 +890,6 @@ export class WriterStatsView
         void load();
     }
 
-    // 月度统计入口，与现有7/30天历史统计独立
-    private renderMonthlySection(
-        container: HTMLElement,
-        today: string
-    ): void {
-        let month = this.selectedMonth ?? today.slice(0, 7);
-
-        const service = new MonthlyStatsService(this.historyService);
-
-        // 使用独立的CSS 类名
-        const section = container.createDiv({
-            cls: [
-                "writer-stats-dashboard__section",
-                "writer-stats-dashboard__monthly"
-            ]
-        });
-
-        const header = section.createDiv({
-            cls:
-                "writer-stats-dashboard__monthly-header"
-        });
-
-        header.createEl("h2", {
-            cls:
-                "writer-stats-dashboard__section-title",
-            text: "月度统计"
-        });
-
-        const navigation = header.createDiv({
-            cls:
-                "writer-stats-dashboard__month-nav"
-        });
-
-        const previous = navigation.createEl(
-            "button",
-            {
-                cls:
-                    "writer-stats-dashboard__month-button",
-                text: "‹"
-            }
-        );
-
-        previous.type = "button";
-        previous.setAttribute(
-            "aria-label",
-            "上一个月"
-        );
-
-        const label = navigation.createSpan({
-            cls:
-                "writer-stats-dashboard__month-label"
-        });
-
-        const next = navigation.createEl(
-            "button",
-            {
-                cls:
-                    "writer-stats-dashboard__month-button",
-                text: "›"
-            }
-        );
-
-        next.type = "button";
-        next.setAttribute(
-            "aria-label",
-            "下一个月"
-        );
-
-        // 月度 CSV 导出工具栏
-        const exportToolbar = section.createDiv({
-            cls:
-                "writer-stats-dashboard__monthly-export-toolbar"
-        });
-
-        const exportButton = exportToolbar.createEl(
-            "button",
-            {
-                cls:
-                    "writer-stats-dashboard__monthly-export-button",
-                text: "导出当前月份 CSV"
-            }
-        );
-
-        exportButton.type = "button";
-        exportButton.title =
-            "在 Vault 的 Writer Stats Exports 文件夹中" +
-            "生成每日汇总与文件明细";
-
-        // 点击导出当前选择的自然月
-        exportButton.addEventListener("click", () => {
-            // 立即保存月份，避免用户切换月份时混淆
-            const requestedMonth = month;
-
-            // 防止连续点击创建重复导出任务
-            exportButton.disabled = true;
-            exportButton.setText("正在导出....");
-
-            void (async () => {
-                try {
-                    // 生成两份 CSV 内容
-                    const bundle =
-                        await this.monthlyCsvExportService
-                            .buildMonthlyCsv(
-                                requestedMonth,
-                                today
-                            );
-
-                    // 保存到当前 Obsidian Vault
-                    await saveMonthlyCsvToVault(
-                        this.app,
-                        bundle
-                    );
-
-                    new Notice(
-                        `已导出 ${requestedMonth} 的两份 CSV` +
-                        `Writer Stats Exports`
-                    );
-                } catch (error) {
-                    console.error(
-                        "[Writer Stats] CSV 导出失败",
-                        error
-                    );
-
-                    new Notice(
-                        "CSV 导出失败，请查看开发者工具中的错误信息"
-                    );
-                } finally {
-                    exportButton.disabled = false;
-                    exportButton.setText(
-                        "导出当前月份 CSV"
-                    );
-                }
-            })();
-        });
-
-        const content = section.createDiv({
-            cls:
-                "writer-stats-dashboard__monthly-content"
-        });
-
-        content.createDiv({
-            cls:
-                "writer-stats-dashboard__history-loading",
-            text: "正在加载月度统计....."
-        });
-
-        // 查询月份数据
-        const load = async (): Promise<void> => {
-            const version = ++this.monthlyRequestVersion;
-
-            const requestedMonth = month;
-
-            const [year, monthNumber] = requestedMonth.split("-");
-
-            label.setText(
-                `${year}年${Number(monthNumber)}月`
-            );
-
-            previous.disabled = requestedMonth <= "1000-01";
-
-            next.disabled = requestedMonth >= today.slice(0, 7);
-
-            // content.empty();
-
-            // content.createDiv({
-            //     cls:
-            //         "writer-stats-dashboard__history-loading",
-            //     text:"正在加载月度统计...."
-            // });
-
-
-            /*
-             * 不再清空已经显示的月度统计。
-             * 新请求完成前保留旧内容，并标记正在更新。
-             */
-            content.addClass("is-updating");
-            content.setAttribute("aria-busy", "true");
-
-
-            try {
-                const summary =
-                    await service.getMonthSummary(
-                        requestedMonth,
-                        today
-                    );
-
-                if (
-                    version !== this.monthlyRequestVersion ||
-                    !content.isConnected
-                ) {
-                    return;
-                }
-
-                content.empty();
-
-                this.renderMonthlyContent(
-                    content,
-                    summary
-                );
-
-                this.renderMonthlyWritingTime(
-                    content,
-                    summary
-                );
-
-                // 月度统计完成后，加载同一月份的文件排行榜。
-                // 排行榜加载失败，不影响前面已经显示的月度数据
-                this.renderMonthlyFileRanking(
-                    content,
-                    summary
-                );
-
-                content.removeClass("is-updating");
-                content.setAttribute("aria-busy", "false");
-            } catch (error) {
-                if (
-                    version !== this.monthlyRequestVersion ||
-                    !content.isConnected
-                ) {
-                    return;
-                }
-
-                console.error(
-                    "[Writer Stats] 月度统计加载失败",
-                    error
-                );
-
-                content.empty();
-
-                content.createDiv({
-                    cls:
-                        "writer-stats-dashboard__history-error",
-                    text: "月度统计加载失败，请切换月份重试"
-                });
-
-                content.removeClass("is-updating");
-                content.setAttribute("aria-busy", "false");
-            }
-        };
-
-        // 上个月
-        previous.addEventListener("click", () => {
-            if (month <= "1000-01") {
-                return;
-            }
-
-            month = shiftMonth(month, -1);
-
-            this.selectedMonth = month;
-
-            void load();
-        });
-
-        // 下个月
-        next.addEventListener("click", () => {
-            if (month >= today.slice(0, 7)) {
-                return;
-            }
-
-            month = shiftMonth(month, 1);
-
-            this.selectedMonth = month;
-
-            void load();
-        });
-
-        // 首次加载
-        void load();
-    }
-
-    // 月度统计内容
-
-    private renderMonthlyContent(
-        container: HTMLElement,
-        summary: MonthlyWritingSummary
-    ): void {
-        container.createDiv({
-            cls:
-                "writer-stats-dashboard__monthly-dates",
-            text:
-                `${summary.startDate} ~ ${summary.endDate}` +
-                (
-                    summary.isCurrentMonth
-                        ? " · 截至今天"
-                        : ""
-                )
-        });
-
-        // 月度汇总
-        const grid = container.createDiv({
-            cls:
-                "writer-stats-dashboard__overview-grid"
-        });
-
-        this.createOverviewItem(
-            grid,
-            "新增",
-            formatSigned(summary.added)
-        );
-
-        this.createOverviewItem(
-            grid,
-            "删除",
-            String(summary.deleted)
-        );
-
-        this.createOverviewItem(
-            grid,
-            "净增长",
-            formatSigned(summary.net)
-        );
-
-        this.createOverviewItem(
-            grid,
-            "活跃天数",
-            `${summary.activeDays} / ${summary.totalDays}`
-        );
-
-        // 空记录壮体啊
-
-        if (summary.isEmpty) {
-            container.createDiv({
-                cls:
-                    "writer-stats-dashboard__monthly-empty",
-                text:
-                    "这个月暂无写作记录"
-            });
-
-            return;
-        }
-
-        /*
-        * MonthlyWritingSummary 继承自
-        * DailyHistorySummary。
-        *
-        * 因此可以直接复用已存在的趋势图，
-        * 不需要再次实现绘图方法。
-        */
-
-        renderTrendChartSection(container,summary,{
-            variant: "dashboard",
-            showAllDateLabels: summary.days.length <= 14
-        });
-
-        // 最佳写作日
-        const best = container.createDiv({
-            cls:
-                "writer-stats-dashboard__best-day"
-        });
-
-        best.createDiv({
-            cls:
-                "writer-stats-dashboard__best-label",
-            text: "本月最佳写作日"
-        });
-
-        best.createDiv({
-            cls:
-                "writer-stats-dashboard__best-day-value",
-            text: summary.bestWritingDay
-                ? (
-                    `${summary.bestWritingDay.date} · ` +
-                    formatSigned(summary.bestWritingDay.added)
-                )
-                : "本月暂无新增记录"
-        });
-    }
-
     /*
      * ========================================
      * Metric Card
@@ -1248,17 +906,16 @@ export class WriterStatsView
     * 旧月份的结果覆盖新界面。
     */
 
-    private renderMonthlyWritingTime (
+    private renderMonthlyWritingTime(
         container: HTMLElement,
-        summary: MonthlyWritingSummary
+        summary: MonthlyWritingSummary,
+        isCurrent: () => boolean
     ): void {
         const host = container.createDiv({
             cls:
                 "writer-stats-dashboard__writing-time-host",
             text: "正在加载写作时间分析...."
         });
-
-        const version = this.monthlyRequestVersion;
 
         void this.writingTimeAnalysisService
             .getSummary(
@@ -1267,7 +924,7 @@ export class WriterStatsView
             )
             .then(result => {
                 if (
-                    version !== this.monthlyRequestVersion ||
+                    !isCurrent() ||
                     !host.isConnected
                 ) {
                     return;
@@ -1282,7 +939,7 @@ export class WriterStatsView
             })
             .catch(error => {
                 if (
-                    version !== this.monthlyRequestVersion ||
+                    !isCurrent() ||
                     !host.isConnected
                 ) {
                     return;
@@ -1301,7 +958,8 @@ export class WriterStatsView
 
     private renderMonthlyFileRanking(
         container: HTMLElement,
-        summary: MonthlyWritingSummary
+        summary: MonthlyWritingSummary,
+        isCurrent: () => boolean
     ): void {
         const host = container.createDiv({
             cls:
@@ -1314,8 +972,6 @@ export class WriterStatsView
             text: "正在加载文件夹统计文件排行榜"
         });
 
-        const version = this.monthlyRequestVersion;
-
         // 两个模块共用一次排行榜查询，避免重复读取历史活动
 
         void this.fileRankingService.getRanking(
@@ -1323,7 +979,7 @@ export class WriterStatsView
             summary.endDate
         ).then(ranking => {
             if (
-                version !== this.monthlyRequestVersion ||
+                !isCurrent() ||
                 !host.isConnected
             ) {
                 return;
@@ -1400,7 +1056,7 @@ export class WriterStatsView
             );
         }).catch(error => {
             if (
-                version !== this.monthlyRequestVersion ||
+                !isCurrent() ||
                 !host.isConnected
             ) {
                 return;
@@ -1554,43 +1210,6 @@ export class WriterStatsView
                 goal.completed
                     ? `今日目标已完成 · ${goal.percentage}%`
                     : `还差 ${goal.remaining}`
-        });
-    }
-
-
-    /*
-     * ========================================
-     * Recent item
-     * ========================================
-     */
-
-    private createOverviewItem(
-        container: HTMLElement,
-        label: string,
-        value: string
-    ): void {
-        const item =
-            container.createDiv({
-                cls:
-                    "writer-stats-dashboard__overview-item"
-            });
-
-
-        item.createDiv({
-            cls:
-                "writer-stats-dashboard__overview-label",
-
-            text:
-                label
-        });
-
-
-        item.createDiv({
-            cls:
-                "writer-stats-dashboard__overview-value",
-
-            text:
-                value
         });
     }
 
