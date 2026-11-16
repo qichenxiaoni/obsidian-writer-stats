@@ -57,8 +57,7 @@ function renderMonthlySummary(
     }
 
     renderTrendChartSection(container, summary, {
-        variant: "dashboard",
-        showAllDateLabels: summary.days.length <= 14
+        variant: "dashboard"
     });
 
     const best = container.createDiv({

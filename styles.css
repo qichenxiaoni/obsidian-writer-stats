@@ -1761,11 +1761,9 @@
 /* Monthly Trend — Date Alignment Fix */
 
 /* 月度图表的首尾日期与对应柱子保持居中 */
-.writer-stats-dashboard__monthly
-.writer-stats-dashboard__trend-axis-label.is-first,
-.writer-stats-dashboard__monthly
-.writer-stats-dashboard__trend-axis-label.is-last {
-    text-align: center;
+.writer-stats-dashboard__monthly .writer-stats-dashboard__trend-axis-label.is-first,
+.writer-stats-dashboard__monthly .writer-stats-dashboard__trend-axis-label.is-last {
+  text-align: center;
 }
 
 /* Best Writing Day */
@@ -3292,14 +3290,27 @@ button.writer-stats-dashboard__ranking-sort:focus-visible {
 }
 
 .writer-stats-dashboard__writing-time-hours {
-  display: grid;
-  grid-template-columns: repeat(24, minmax(0, 1fr));
-  gap: 4px;
+  display: block;
+  width: 100%;
+  max-width: 100%;
   height: 174px;
   padding: 16px 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-sizing: border-box;
+
   border: 1px solid var(--background-modifier-border);
   border-radius: 12px;
   background: var(--background-secondary);
+}
+
+.writer-stats-dashboard__writing-time-hours-grid {
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+  min-width: 1344px;
+  height: 100%;
 }
 
 /* 24 小时分布与每日时长：确保每列具有明确高度 */
@@ -3349,7 +3360,8 @@ button.writer-stats-dashboard__ranking-sort:focus-visible {
 
 .writer-stats-dashboard__writing-time-scroll {
   max-width: 100%;
-  overflow-y: auto;
+  overflow-y: hidden;
+  overflow-x: auto;
 }
 
 .writer-stats-dashboard__writing-time-days {
@@ -3364,6 +3376,14 @@ button.writer-stats-dashboard__ranking-sort:focus-visible {
   border: 1px solid var(--background-modifier-border);
   border-radius: 12px;
   background: var(--background-secondary);
+
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 每日编辑时长日期保持单行显示 */
+.writer-stats-dashboard__writing-time-day>span {
+  white-space: nowrap;
 }
 
 .writer-stats-dashboard__writing-time-files {
@@ -3406,4 +3426,36 @@ button.writer-stats-dashboard__ranking-sort:focus-visible {
   .writer-stats-dashboard__writing-time-card:last-child {
     border-bottom: 0;
   }
+}
+
+/* 完整日期趋势：柱形区和日期轴共用滚动区域 */
+.writer-stats-dashboard__trend-scroll,
+.writer-stats-modal__trend-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.writer-stats-dashboard__trend-chart,
+.writer-stats-modal__trend-chart {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 所有日期与对应柱形居中对齐 */
+.writer-stats-dashboard__trend-scroll .writer-stats-dashboard__trend-axis-label,
+.writer-stats-modal__trend-scroll .writer-stats-modal__trend-axis-label {
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 24 小时及每日时长标签不换行 */
+.writer-stats-dashboard__writing-time-hour>span,
+.writer-stats-dashboard__writing-time-day>span {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
 }

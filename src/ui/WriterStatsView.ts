@@ -15,10 +15,6 @@ import type {
     DailyOverview
 } from "../domain/DailyOverview";
 
-import type {
-    DailyHistorySummary
-} from "../domain/DailyHistorySummary";
-
 import {
     getLocalDateKey
 } from "../utils/DateService";
@@ -70,17 +66,14 @@ import {
 } from "./StatsPresentation";
 
 import {
-    renderTrendChartSection
-} from "./TrendChartSection";
-
-import {
     renderMonthlyStatsSection,
     type MonthlyStatsSectionHandle
 } from "./MonthlyStatsSection";
 
 import {
-    renderOverviewMetric
-} from "./OverviewMetric";
+    renderHistorySection,
+    type HistorySectionHandle
+} from "./HistorySection";
 
 export const WRITER_STATS_VIEW_TYPE =
     "writer-stats-dashboard";
@@ -92,6 +85,8 @@ export class WriterStatsView
     // 历史查询范围，初次打开默认 7 天
     private historyRangeDays:
         7 | 30 = 7;
+
+    private historySection: HistorySectionHandle | null = null;
 
     // 防止多个异步 refresh 请求相互覆盖
     private refreshVersion = 0;
@@ -170,7 +165,12 @@ export class WriterStatsView
 
     async onClose(): Promise<void> {
         ++this.refreshVersion;
+        
+        this.historySection?.dispose();
+        this.historySection = null;
+
         this.monthlySection?.dispose();
+
         this.monthlySection = null;
         ++this.heatmapRequestVersion;
 
@@ -185,6 +185,9 @@ export class WriterStatsView
         // 标识本次刷新，避免较慢的旧请求覆盖新结果
 
         const currentVersion = ++this.refreshVersion;
+
+        this.historySection?.dispose();
+        this.historySection = null;
 
         // 整体刷新时，让上一次月度请求失败
         this.monthlySection?.dispose();
@@ -241,10 +244,17 @@ export class WriterStatsView
             );
 
             // 
-            this.renderHistorySection(
+            this.historySection = renderHistorySection(
                 content,
                 date,
-                history
+                history,
+                {
+                    historyService: this.historyService,
+                    selectedDays: this.historyRangeDays,
+                    onSelectDays: days => {
+                        this.historyRangeDays = days;
+                    }
+                }
             );
 
             // 年度写作热力图
@@ -437,282 +447,6 @@ export class WriterStatsView
         );
 
         return content;
-    }
-
-
-    // History Section
-
-    private renderHistorySection(
-        container: HTMLElement,
-        date: string,
-        initialSummary: DailyHistorySummary
-    ): void {
-        const section = container.createDiv({
-            cls: [
-                "writer-stats-dashboard__section",
-                "writer-stats-dashboard__history"
-            ],
-        });
-
-        // 
-
-        const header = section.createDiv({
-            cls: "writer-stats-dashboard__history-header"
-        });
-
-        header.createEl(
-            "h2",
-            {
-                cls: "writer-stats-dashboard__section-title",
-                text: "趋势与历史"
-            }
-        );
-
-        //  7 / 30 转换
-        const selector = header.createDiv({
-            cls: "writer-stats-dashboard__history-selector"
-        });
-
-
-        const sevenButton = selector.createEl("button", {
-            cls:
-                "writer-stats-dashboard__history-button" +
-                (this.historyRangeDays === 7 ? " is-active" : ""),
-            text: "7 天",
-            attr: {
-                type: "button",
-                "aria-pressed": String(this.historyRangeDays === 7)
-            }
-        });
-
-        const thirtyButton = selector.createEl("button", {
-            cls:
-                "writer-stats-dashboard__history-button" +
-                (this.historyRangeDays === 30 ? " is-active" : ""),
-            text: "30 天",
-            attr: {
-                type: "button",
-                "aria-pressed": String(this.historyRangeDays === 30)
-            }
-        });
-
-
-        // 
-        const historyContent = section.createDiv({
-            cls: "writer-stats-dashboard__history-content"
-        });
-
-        // 
-        let requestVersion = 0;
-
-        // 
-        const updateButtonState = (): void => {
-            const isSevenActive =
-                this.historyRangeDays === 7;
-
-            const isThirtyActive =
-                this.historyRangeDays === 30;
-
-            sevenButton.classList.toggle(
-                "is-active",
-                isSevenActive
-            );
-
-            thirtyButton.classList.toggle(
-                "is-active",
-                isThirtyActive
-            );
-
-            sevenButton.setAttribute(
-                "aria-pressed",
-                String(isSevenActive)
-            );
-
-            thirtyButton.setAttribute(
-                "aria-pressed",
-                String(isThirtyActive)
-            );
-        };
-
-        //切换历史查询范围 
-        const changeRange = async (days: 7 | 30): Promise<void> => {
-
-            // 保存用户选择
-            this.historyRangeDays = days;
-
-            // 立即更新按钮
-            updateButtonState();
-
-            const currentRequest = ++requestVersion;
-
-            historyContent.empty();
-
-            historyContent.createDiv({
-                cls:
-                    "writer-stats-dashboard__history-loading",
-                text: "正在加载历史数据...."
-            });
-
-            try {
-                const summary =
-                    await this.historyService.getRecentSummary(
-                        date,
-                        days
-                    );
-
-
-                if (
-                    currentRequest !== requestVersion ||
-                    !historyContent.isConnected ||
-                    this.historyRangeDays !== days
-                ) {
-                    return;
-                }
-
-                historyContent.empty();
-
-                this.renderHistoryContent(
-                    historyContent,
-                    summary
-                );
-            } catch (error) {
-                if (
-                    currentRequest !== requestVersion ||
-                    !historyContent.isConnected
-                ) {
-                    return;
-                }
-
-                console.error(
-                    "[Writer Stats] Failed to load histroy",
-                    error
-                );
-
-                historyContent.empty();
-
-                historyContent.createDiv({
-                    cls:
-                        "writer-stats-dashboard__history-error",
-                    text: "历史数据加载失败，请重试"
-                });
-            }
-        };
-
-        // 注册按钮事件
-
-        sevenButton.addEventListener(
-            "click",
-            () => {
-                void changeRange(7);
-            }
-        );
-
-        thirtyButton.addEventListener(
-            "click",
-            () => {
-                void changeRange(30);
-            }
-        );
-
-        // 
-        updateButtonState();
-
-        this.renderHistoryContent(
-            historyContent,
-            initialSummary
-        );
-    }
-
-    // History Content
-
-    private renderHistoryContent(
-        container: HTMLElement,
-        summary: DailyHistorySummary
-    ): void {
-        container.createDiv({
-            cls:
-                "writer-stats-dashboard__history-dates",
-            text: `${summary.startDate} ~ ${summary.endDate}`
-        });
-
-        const grid = container.createDiv({
-            cls:
-                "writer-stats-dashboard__overview-grid"
-        });
-
-        renderOverviewMetric(
-            grid,
-            "新增",
-            formatSigned(summary.added)
-        );
-
-        renderOverviewMetric(
-            grid,
-            "删除",
-            String(summary.deleted)
-        );
-
-        renderOverviewMetric(
-            grid,
-            "净增长",
-            formatSigned(summary.net)
-        );
-
-        renderOverviewMetric(
-            grid,
-            "活跃天数",
-            `${summary.activeDays} / ${summary.totalDays}`
-        );
-
-        renderOverviewMetric(
-            grid,
-            "连续写作",
-            `${summary.writingStreak} 天`
-        );
-
-        renderOverviewMetric(
-            grid,
-            "最长连续",
-            `${summary.longesWritingStreak} 天`
-        );
-
-        // 
-
-        renderTrendChartSection(container, summary, {
-            variant: "dashboard"
-        });
-
-        // 
-
-        const bestDay = container.createDiv({
-            cls:
-                "writer-stats-dashboard__best-day"
-        });
-
-        bestDay.createDiv({
-            cls:
-                "writer-stats-dashboard__best-day-label",
-            text: "最佳写作日"
-        });
-
-        const bestWritingDay =
-            summary.bestWritingDay;
-
-        if (bestWritingDay) {
-            bestDay.createDiv({
-                cls:
-                    "writer-stats-dashboard__best-day-value",
-                text:
-                    `${bestWritingDay.date} ·` +
-                    formatSigned(bestWritingDay.added)
-            });
-        } else {
-            bestDay.createDiv({
-                cls:
-                    "writer-stats-dashboard__best-day-value" + "is-empty",
-                text: "暂无写作记录"
-            });
-        }
     }
 
     // Dashboard 年度热力图，历史年份统计完整自然年，当前年份仅统计至今天，不允许向未来年份切换

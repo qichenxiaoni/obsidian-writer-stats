@@ -157,9 +157,13 @@ export function renderWritingTimeSection(
         text: "24 小时编辑分布"
     });
 
-    const hours = section.createDiv({
+    const hoursViewport = section.createDiv({
         cls:
             "writer-stats-dashboard__writing-time-hours"
+    });
+
+    const hours = hoursViewport.createDiv({
+        cls: "writer-stats-dashboard__writing-time-hours-grid"
     });
 
     const hourPeak = Math.max(
@@ -191,12 +195,10 @@ export function renderWritingTimeSection(
             24 
         );
 
-        if (hour % 4 === 0) {
-            item.createSpan({
-                text:
-                    `${String(hour).padStart(2,"0")}:00`
-            });
-        }
+        // 每个小时保留相同的刻度占位，确保柱状图基线一致
+        item.createSpan({
+            text: `${String(hour).padStart(2,"0")}:00`
+        });
 
         setTooltip(
             item,
@@ -225,6 +227,9 @@ export function renderWritingTimeSection(
         String(summary.daily.length)
     );
 
+    // 每个日期分配足够宽度，日期较多时通过横向滚动查看
+    days.style.minWidth = `${Math.max(520,summary.daily.length * 52)}px`;
+
     const dayPeak = Math.max(
         1,
         ...summary.daily.map(
@@ -232,7 +237,7 @@ export function renderWritingTimeSection(
         )
     );
 
-    summary.daily.forEach((day,index) => {
+    summary.daily.forEach(day => {
         const item = days.createDiv({
             cls:
                 "writer-stats-dashboard__writing-time-day"
@@ -240,7 +245,7 @@ export function renderWritingTimeSection(
 
         const track = item.createDiv({
             cls:
-                "writer-stats-dashboard__writinng-time-day-track"
+                "writer-stats-dashboard__writing-time-day-track"
         });
 
         const fill = track.createDiv({
@@ -256,17 +261,9 @@ export function renderWritingTimeSection(
             28
         );
 
-        const showLabel = 
-            summary.daily.length <= 7 ||
-            day.activeMs > 0 ||
-            index === 0 ||
-            index === summary.daily.length - 1 ||
-            index % 5 === 0;
-        
+        // 所有日期都显示，不因当天没有编辑记录而隐藏
         item.createSpan({
-            text: showLabel
-                ? day.date.slice(5)
-                : ""
+            text: day.date.slice(5)
         });
 
         setTooltip(

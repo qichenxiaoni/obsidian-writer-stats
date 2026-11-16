@@ -2,16 +2,13 @@ import { setTooltip } from "obsidian";
 import type { DailyHistorySummary } from "../domain/DailyHistorySummary";
 import {
     formatSigned,
-    formatTrendDate,
-    getTrendBarHeight,
-    shouldShowTrendLabel
+    getTrendBarHeight
 } from "./StatsPresentation";
 
 export type TrendChartVariant = "dashboard" | "modal";
 
 export interface TrendChartOptions {
     variant: TrendChartVariant;
-    showAllDateLabels?: boolean;
 }
 
 /**
@@ -57,7 +54,17 @@ export function renderTrendChartSection(
         ...summary.days.map(day => day.added)
     );
 
-    const plot = chartHost.createDiv({
+    const scroll = chartHost.createDiv({
+        cls: `${prefix}__trend-scroll`
+    });
+
+    const chart = scroll.createDiv({
+        cls: `${prefix}__trend-chart`
+    });
+
+    chart.style.minWidth = `${dayCount * 52}px`;
+
+    const plot = chart.createDiv({
         cls: `${prefix}__trend-plot`
     });
 
@@ -126,7 +133,7 @@ export function renderTrendChartSection(
         }
     }
 
-    const axis = chartHost.createDiv({
+    const axis = chart.createDiv({
         cls: `${prefix}__trend-axis`
     });
 
@@ -145,14 +152,8 @@ export function renderTrendChartSection(
             cls: `${prefix}__trend-axis-label`
         });
 
-        if (
-            options.showAllDateLabels === true ||
-            shouldShowTrendLabel(index,dayCount)
-        ) {
-            label.setText(
-                formatTrendDate(day.date)
-            );
-        }
+        // 连续显示范围内的全部日期
+        label.setText(day.date.slice(5));
 
         if (index === 0) {
             label.classList.add("is-first");
