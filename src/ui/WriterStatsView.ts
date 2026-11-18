@@ -45,8 +45,9 @@ import {
 } from "./FileWritingDetailModal";
 
 import {
-    renderYearHeatmapSection
-} from "./YearHeatmapSection";
+    renderAnnualHeatmapSection,
+    type AnnualHeatmapSectionHandle
+} from "./AnnualHeatmapSection";
 
 import type {
     MonthlyCsvExportService
@@ -97,11 +98,11 @@ export class WriterStatsView
     // 月度模块自行管理请求版本和销毁
     private monthlySection: MonthlyStatsSectionHandle | null = null;
 
-    // 年度热力图异步请求版本
-    private heatmapRequestVersion = 0;
+    // 年度模块管理独立的异步请求与生命周期
+    private annualHeatmapSection: AnnualHeatmapSectionHandle | null = null;
 
     // null 表示初次打开使用当前年份
-    private selectdHeatmapYear: number | null = null;
+    private selectedHeatmapYear: number | null = null;
 
     // 月份切换时保留用户选择的排行榜排序
     private fileRankingSort: FileRankingSort = "added";
@@ -165,14 +166,15 @@ export class WriterStatsView
 
     async onClose(): Promise<void> {
         ++this.refreshVersion;
-        
+
         this.historySection?.dispose();
         this.historySection = null;
 
         this.monthlySection?.dispose();
-
         this.monthlySection = null;
-        ++this.heatmapRequestVersion;
+
+        this.annualHeatmapSection?.dispose();
+        this.annualHeatmapSection = null;
 
         this.contentEl.empty();
     }
@@ -192,7 +194,9 @@ export class WriterStatsView
         // 整体刷新时，让上一次月度请求失败
         this.monthlySection?.dispose();
         this.monthlySection = null;
-        ++this.heatmapRequestVersion;
+
+        this.annualHeatmapSection?.dispose();
+        this.annualHeatmapSection = null;
 
         // 
         // const previousScrollTop = container.scrollTop;
@@ -257,10 +261,15 @@ export class WriterStatsView
                 }
             );
 
-            // 年度写作热力图
-            this.renderAnnualHeatmapSection(
+            // 年度写作热力图: 加载与导航由独立模块管理
+            this.annualHeatmapSection = renderAnnualHeatmapSection(
                 content,
-                date
+                date,
+                {
+                    historyService: this.historyService,
+                    selectedYear: this.selectedHeatmapYear,
+                    onSelectYear: year => { this.selectedHeatmapYear = year; }
+                }
             );
 
             // 在7/30天历史模块下方显示月度统计
@@ -447,181 +456,6 @@ export class WriterStatsView
         );
 
         return content;
-    }
-
-    // Dashboard 年度热力图，历史年份统计完整自然年，当前年份仅统计至今天，不允许向未来年份切换
-
-    private renderAnnualHeatmapSection(
-        container: HTMLElement,
-        today: string
-    ): void {
-        const currentYear = Number(
-            today.slice(0, 4)
-        );
-
-        let year = Math.min(
-            this.selectdHeatmapYear ?? currentYear,
-            currentYear
-        );
-
-        const section = container.createDiv({
-            cls:
-                "writer-stats-dashboard__annual"
-        });
-
-        const header = section.createDiv({
-            cls:
-                "writer-stats-dashboard__annual-header"
-        });
-
-        header.createEl("h2", {
-            cls:
-                "writer-stats-dashboard__section-title",
-            text: "年度写作热力图"
-        });
-
-        const controls = header.createDiv({
-            cls:
-                "writer-stats-dashboard__annual-nav"
-        });
-
-        const previous = controls.createEl(
-            "button",
-            { text: "‹" }
-        );
-
-        previous.type = "button";
-        previous.setAttribute(
-            "aria-label",
-            "上一年"
-        );
-
-        const label = controls.createSpan({
-            cls:
-                "writer-stats-dashboard__annual-year"
-        });
-
-        const next = controls.createEl(
-            "button",
-            { text: "›" }
-        );
-
-        next.type = "button";
-        next.setAttribute(
-            "aria-label",
-            "下一年"
-        );
-
-        const viewport = section.createDiv({
-            cls:
-                "writer-stats-dashboard__annual-viewport"
-        });
-
-        const load = async (): Promise<void> => {
-            const version = ++this.heatmapRequestVersion;
-
-            const requestedYear = year;
-
-            label.setText(`${year}年`);
-
-            previous.disabled = year <= 1000;
-            next.disabled = year >= currentYear;
-
-            viewport.setAttribute(
-                "aria-busy",
-                "true"
-            );
-
-            // 首次加载显示提示，切换年份时保留旧内容，减少空白闪烁
-            if (!viewport.hasChildNodes()) {
-                viewport.createDiv({
-                    text: "正在加载年度热力图...."
-                });
-            }
-
-            try {
-                const firstDate = `${requestedYear}-01-01`;
-
-                const lastDate =
-                    requestedYear === currentYear
-                        ? today
-                        : `${requestedYear}-12-31`
-
-                const summary =
-                    await this.historyService.getSummary(
-                        firstDate,
-                        lastDate
-                    );
-
-                // 旧请求、已关闭的视图不再更新 DOM
-                if (
-                    version !== this.heatmapRequestVersion ||
-                    !viewport.isConnected
-                ) {
-                    return;
-                }
-
-                viewport.empty();
-
-                renderYearHeatmapSection(
-                    viewport,
-                    summary,
-                    `${requestedYear} 年`
-                );
-
-                viewport.setAttribute(
-                    "aria-busy",
-                    "false"
-                );
-            } catch (error) {
-                if (
-                    version !== this.heatmapRequestVersion ||
-                    !viewport.isConnected
-                ) {
-                    return;
-                }
-
-                console.error(
-                    "[Writer Stats] 年度热力图加载失败",
-                    error
-                );
-
-                viewport.empty();
-
-                viewport.createDiv({
-                    text:
-                        "年度热力图加载失败." +
-                        "请重新选择年份"
-                });
-
-                viewport.setAttribute(
-                    "aria-busy",
-                    "false"
-                );
-            }
-        };
-
-        previous.addEventListener("click", () => {
-            if (year <= 1000) {
-                return;
-            }
-
-            this.selectdHeatmapYear = --year;
-
-            void load();
-        });
-
-        next.addEventListener("click", () => {
-            if (year >= currentYear) {
-                return;
-            }
-
-            this.selectdHeatmapYear = ++year;
-
-            void load();
-        });
-
-        void load();
     }
 
     /*
